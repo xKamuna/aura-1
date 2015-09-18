@@ -1,0 +1,173 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+	<head>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		
+		<title>Msgr Client</title>
+		
+		<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.1/normalize.min.css" />
+		
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
+		<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.min.css" />
+		
+		<style>
+			body {
+				margin: 10px;
+			}
+		</style>
+		
+		<script>
+			var ClientPacket = function(op) {
+				this.op = op;
+				this.id = 0;
+				this.buffer = new Uint8Array(1024);
+				this.ptr = 0;
+				this.length = 0;
+				this.elements = 0;
+				
+				// Op
+				for(var i = 3; i >= 0; --i)
+					this.buffer[this.ptr++] = (this.op >> (8 * i));
+				this.length += 4;
+				
+				// Id
+				this.ptr += 8;
+				this.length += 8;
+				
+				// Counters (length, elements, 0)
+				this.ptr += 3;
+				this.length += 3;
+			};
+			
+			PacketType = {
+				Byte:   1,
+				Short:  2,
+				Int:    3,
+				Long:   4,
+				Float:  5,
+				String: 6,
+				Bin:    7,
+			};
+			
+			ClientPacket.prototype.putByte = function(val) {
+				this.buffer[this.ptr++] = PacketType.Byte;
+				this.buffer[this.ptr++] = val;
+				this.length += 2;
+			};
+			
+			ClientPacket.prototype.putShort = function(val) {
+				this.buffer[this.ptr++] = PacketType.Short;
+				this.buffer[this.ptr++] = (val >> (8 * 1));
+				this.buffer[this.ptr++] = (val >> (8 * 0));
+				this.length += 3;
+			};
+			
+			ClientPacket.prototype.putInt = function(val) {
+				this.buffer[this.ptr++] = PacketType.Int;
+				this.buffer[this.ptr++] = (val >> (8 * 3));
+				this.buffer[this.ptr++] = (val >> (8 * 2));
+				this.buffer[this.ptr++] = (val >> (8 * 1));
+				this.buffer[this.ptr++] = (val >> (8 * 0));
+				this.length += 5;
+			};
+			
+			ClientPacket.prototype.putString = function(val) {
+				val += '\0';
+				this.buffer[this.ptr++] = PacketType.String;
+				this.buffer[this.ptr++] = (val.length >> (8 * 1));
+				this.buffer[this.ptr++] = (val.length >> (8 * 0));
+				for (var i = 0; i < val.length; ++i)
+					this.buffer[this.ptr++] = val.charCodeAt(i);
+				this.length += 3 + val.length;
+			};
+			
+			var ServerPacket = function(buffer) {
+				this.op = 0;
+				this.id = 0;
+				this.buffer = buffer;
+				this.ptr = 0;
+				
+				for(var i = 3; i >= 0; --i) {
+					this.op |= this.buffer[this.ptr] << (8 * i);
+					this.ptr++;
+				}
+				
+				this.ptr += 8;
+				while(this.buffer[this.ptr++] != 0);
+			};
+			
+			ServerPacket.prototype.getByte = function() {
+				if(this.buffer[this.ptr++] != PacketType.Byte)
+					throw "Unexpected type.";
+				
+				return this.buffer[this.ptr++];
+			};
+			
+			ServerPacket.prototype.getInt = function() {
+				if(this.buffer[this.ptr++] != PacketType.Int)
+					throw "Unexpected type.";
+				
+				var val = 0;
+				val |= this.buffer[this.ptr++] << (8 * 3);
+				val |= this.buffer[this.ptr++] << (8 * 2);
+				val |= this.buffer[this.ptr++] << (8 * 1);
+				val |= this.buffer[this.ptr++] << (8 * 0);
+				
+				return val;
+			};
+			
+			var ws;
+			
+			$().ready(function() {
+				$('#btn-login').click(function() {
+					var ip = $('#txt-ip').val();
+					var port = $('#txt-port').val();
+					
+					ws = new WebSocket('ws://' + ip + ':' + port + '/');
+					ws.binaryType = 'arraybuffer';
+					ws.onerror = onerror;
+					ws.onopen = onopen;
+					ws.onmessage = onmessage;
+				});
+			});
+			
+			function onerror(ev) {
+				console.error('err: ' + ev);
+			}
+			
+			function onopen(ev) {
+				console.log('open');
+				
+				var packet = new ClientPacket(1);
+				packet.putByte(1);
+				packet.putString('admin');
+				packet.putString('admin');
+				
+				send(packet);
+			}
+			
+			function onmessage(ev) {
+				var packet = new ServerPacket(new Uint8Array(ev.data));
+				console.log('Op: ' + packet.op.toString(16));
+				console.log(packet.getByte());
+				console.log('0x' + packet.getInt().toString(16));
+			}
+			
+			function send(packet) {
+				ws.send(packet.buffer.subarray(0, packet.length));
+			}
+		</script>
+	</head>
+	<body>
+		<div id="login">
+			<input id="txt-ip" type="text" value="127.0.0.1" placeholder="IP" />
+			<input id="txt-port" type="text" value="8181" placeholder="Port" />
+			<input id="txt-username" type="text" placeholder="Username" />
+			<input id="txt-password" type="password" placeholder="Password" />
+			<input id="btn-login" type="button" value="Login" />
+		</div>
+	</body>
+</html>
