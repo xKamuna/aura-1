@@ -3,9 +3,6 @@
 //--- Description -----------------------------------------------------------
 // Second quest in the Uladh beginner quest series, started automatically
 // after talking to Duncan.
-//--- Notes -----------------------------------------------------------------
-// Since we don't have dungeons yet the clear Alby objective can be done by
-// simply talking to Trefor again.
 //---------------------------------------------------------------------------
 
 public class RescueResidentQuestScript : QuestScript
@@ -48,11 +45,7 @@ public class RescueResidentQuestScript : QuestScript
 			await npc.Select();
 			npc.Close2();
 
-			var scene = new Cutscene("tuto_smash", npc.Player);
-			scene.AddActor("me", npc.Player);
-			scene.AddActor("#trefor", npc.NPC);
-			scene.AddActor("#brownfox", 50001);
-			scene.Play();
+			Cutscene.Play("tuto_smash", npc.Player);
 			
 			return HookResult.End;
 		}

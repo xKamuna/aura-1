@@ -38,6 +38,7 @@ namespace Aura.Channel.Scripting.Compilers
 			add.Append("using Aura.Channel.World.Dungeons.Props;");
 			add.Append("using Aura.Channel.World.Dungeons.Puzzles;");
 			add.Append("using Aura.Channel.World.Entities;");
+			add.Append("using Aura.Channel.World.Entities.Props;");
 			add.Append("using Aura.Channel.World;");
 			add.Append("using Aura.Channel.World.Quests;");
 			add.Append("using Aura.Channel;");
@@ -45,6 +46,7 @@ namespace Aura.Channel.Scripting.Compilers
 			add.Append("using Aura.Data.Database;");
 			add.Append("using Aura.Mabi.Const;");
 			add.Append("using Aura.Mabi;");
+			add.Append("using Aura.Mabi.Network;");
 			add.Append("using Aura.Shared.Network;");
 			add.Append("using Aura.Shared.Util;");
 			add.Append("using Aura.Shared.Util.Commands;");

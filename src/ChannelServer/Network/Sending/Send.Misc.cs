@@ -227,13 +227,12 @@ namespace Aura.Channel.Network.Sending
 		/// Sends CutsceneEnd to cutscene's leader.
 		/// </summary>
 		/// <param name="cutscene"></param>
-		public static void CutsceneEnd(Cutscene cutscene)
+		public static void CutsceneEnd(Creature creature)
 		{
 			var packet = new Packet(Op.CutsceneEnd, MabiId.Channel);
-			packet.PutLong(cutscene.Leader.EntityId);
+			packet.PutLong(creature.EntityId);
 
-			// TODO: Send to whole party?
-			cutscene.Leader.Client.Send(packet);
+			creature.Client.Send(packet);
 		}
 
 		/// <summary>
@@ -244,12 +243,12 @@ namespace Aura.Channel.Network.Sending
 		/// the character after watching the cutscene.
 		/// </remarks>
 		/// <param name="cutscene"></param>
-		public static void CutsceneUnk(Cutscene cutscene)
+		public static void CutsceneUnk(Creature creature)
 		{
 			var packet = new Packet(Op.CutsceneUnk, MabiId.Channel);
-			packet.PutLong(cutscene.Leader.EntityId);
+			packet.PutLong(creature.EntityId);
 
-			cutscene.Leader.Client.Send(packet);
+			creature.Client.Send(packet);
 		}
 
 		/// <summary>
@@ -266,7 +265,7 @@ namespace Aura.Channel.Network.Sending
 		}
 
 		/// <summary>
-		/// Broadcasts UseMotion and CancelMotion (cancel is true) around creature.
+		/// Broadcasts UseMotion and CancelMotion (if cancel is true) in creature's region.
 		/// </summary>
 		/// <param name="creature"></param>
 		/// <param name="category"></param>
@@ -276,13 +275,7 @@ namespace Aura.Channel.Network.Sending
 		public static void UseMotion(Creature creature, int category, int type, bool loop = false, bool cancel = false)
 		{
 			if (cancel)
-			{
-				// Cancel motion
-				var cancelPacket = new Packet(Op.CancelMotion, creature.EntityId);
-				cancelPacket.PutByte(0);
-
-				creature.Region.Broadcast(cancelPacket, creature);
-			}
+				CancelMotion(creature);
 
 			// Do motion
 			var packet = new Packet(Op.UseMotion, creature.EntityId);
@@ -291,11 +284,26 @@ namespace Aura.Channel.Network.Sending
 			packet.PutByte(loop);
 			packet.PutShort(0);
 
+			// XXX: Why is it region and not range again...? Maybe so you see
+			//   the motion when coming into range? ... does that work?
+
 			creature.Region.Broadcast(packet, creature);
 		}
 
 		/// <summary>
-		/// Broadcasts MotionCancel2 in range of creature.
+		/// Broadcasts CancelMotion in creature's region.
+		/// </summary>
+		/// <param name="creature"></param>
+		public static void CancelMotion(Creature creature)
+		{
+			var cancelPacket = new Packet(Op.CancelMotion, creature.EntityId);
+			cancelPacket.PutByte(0);
+
+			creature.Region.Broadcast(cancelPacket, creature);
+		}
+
+		/// <summary>
+		/// Broadcasts MotionCancel2 in creature's region.
 		/// </summary>
 		/// <param name="creature"></param>
 		/// <param name="unkByte"></param>
@@ -354,6 +362,43 @@ namespace Aura.Channel.Network.Sending
 				foreach (var item in items)
 					packet.AddItemInfo(item, ItemPacketType.Private);
 			}
+
+			creature.Client.Send(packet);
+		}
+
+		/// <summary>
+		/// Sends Inquiry to creature's client.
+		/// </summary>
+		/// <param name="creature"></param>
+		/// <param name="id"></param>
+		/// <param name="format"></param>
+		/// <param name="args"></param>
+		public static void Inquiry(Creature creature, byte id, string format, params object[] args)
+		{
+			var packet = new Packet(Op.Inquiry, creature.EntityId);
+			packet.PutByte(id);
+			packet.PutString(format, args);
+
+			creature.Client.Send(packet);
+		}
+
+		/// <summary>
+		/// Sends InquiryResponseR to creature's client.
+		/// </summary>
+		/// <param name="creature"></param>
+		/// <param name="success"></param>
+		public static void InquiryResponseR(Creature creature, bool success)
+		{
+			var packet = new Packet(Op.InquiryResponseR, creature.EntityId);
+			packet.PutByte(success);
+
+			creature.Client.Send(packet);
+		}
+
+		public static void SpinColorWheelR(Creature creature, float result)
+		{
+			var packet = new Packet(Op.SpinColorWheelR, creature.EntityId);
+			packet.PutFloat(result);
 
 			creature.Client.Send(packet);
 		}

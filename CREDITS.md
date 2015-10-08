@@ -3,17 +3,17 @@ Developers
 
 Active developers
 
-* exec
-* Xcelled
-* Cosmos
+- exec - https://github.com/exectails
 
 Inactive Developers
 ==============================
 
 Developers who have been working on Aura at some point
 
+* Cosmos
 * K. (anonymous)
 * Yiting
+* Xcelled
 
 Noteworthy contributors
 ==============================
@@ -30,6 +30,7 @@ People who have supported the development with a considerable donation
 
 * Hitzuki
 * Seeker
+* Pegwald
 
 Others
 ==============================

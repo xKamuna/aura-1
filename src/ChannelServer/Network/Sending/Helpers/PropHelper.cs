@@ -22,6 +22,7 @@ namespace Aura.Channel.Network.Sending.Helpers
 				packet.PutString(prop.Ident);
 				packet.PutString(prop.Title);
 				packet.PutBin(prop.Info);
+
 				packet.PutString(prop.State);
 				packet.PutLong(0);
 
@@ -29,14 +30,15 @@ namespace Aura.Channel.Network.Sending.Helpers
 				if (prop.HasXml)
 					packet.PutString(prop.Xml.ToString());
 
-				packet.PutInt(prop.Extensions.Count);
-				foreach (var ext in prop.Extensions)
+				var extensions = prop.Extensions.GetList();
+				packet.PutInt(extensions.Count);
+				foreach (var extension in extensions)
 				{
-					packet.PutInt((int)ext.SignalType);
-					packet.PutInt((int)ext.EventType);
-					packet.PutString(ext.Name);
-					packet.PutByte(ext.Mode);
-					packet.PutString(ext.Value.ToString());
+					packet.PutInt((int)extension.SignalType);
+					packet.PutInt((int)extension.EventType);
+					packet.PutString(extension.Name);
+					packet.PutByte(extension.Mode);
+					packet.PutString(extension.Value.ToString());
 				}
 
 				packet.PutShort(0);
@@ -46,17 +48,27 @@ namespace Aura.Channel.Network.Sending.Helpers
 				packet.PutString(prop.State);
 				packet.PutLong(DateTime.Now);
 
+				packet.PutByte(prop.HasXml);
 				if (prop.HasXml)
-				{
-					packet.PutByte(true);
 					packet.PutString(prop.Xml.ToString());
-				}
-				else
-				{
-					packet.PutByte(false);
-				}
 
 				packet.PutFloat(prop.Info.Direction);
+
+				// Done't add if there aren't any.
+				if (prop.Extensions.HasAny)
+				{
+					var extensions = prop.Extensions.GetList();
+
+					packet.PutInt(extensions.Count);
+					foreach (var extension in extensions)
+					{
+						packet.PutInt((int)extension.SignalType);
+						packet.PutInt((int)extension.EventType);
+						packet.PutString(extension.Name);
+						packet.PutByte(extension.Mode);
+						packet.PutString(extension.Value.ToString());
+					}
+				}
 			}
 
 			return packet;

@@ -24,7 +24,10 @@ namespace Aura.Channel.Network.Handlers
 			var creature = client.GetCreatureSafe(packet.Id);
 
 			if (!creature.Can(Locks.Speak))
+			{
+				Log.Debug("Speak locked for '{0}'.", creature.Name);
 				return;
+			}
 
 			// Don't send message if it's a valid command
 			if (ChannelServer.Instance.CommandProcessor.Process(client, creature, message))
@@ -43,6 +46,17 @@ namespace Aura.Channel.Network.Handlers
 			var creature = client.GetCreatureSafe(packet.Id);
 
 			Send.VisualChat(creature, url, width, height);
+		}
+
+		[PacketHandler(Op.PartyChat)]
+		public void PartyChat(ChannelClient client, Packet packet)
+		{
+			var msg = packet.GetString();
+
+			var creature = client.GetCreatureSafe(packet.Id);
+
+			if (creature.IsInParty)
+				Send.PartyChat(creature, msg);
 		}
 	}
 }

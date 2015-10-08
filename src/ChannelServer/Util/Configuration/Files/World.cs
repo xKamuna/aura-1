@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Aura development team - Licensed under GNU GPL
 // For more information, see license file in the main folder
 
+using Aura.Shared.Util;
 using Aura.Shared.Util.Configuration;
 using System;
 
@@ -36,6 +37,7 @@ namespace Aura.Channel.Util.Configuration.Files
 		public bool NoDurabilityLoss { get; protected set; }
 		public bool UnlimitedUpgrades { get; protected set; }
 		public bool UncapProficiency { get; protected set; }
+		public bool UnlimitedDyes { get; protected set; }
 
 		public TimeSpan RebirthTime { get; protected set; }
 
@@ -45,6 +47,9 @@ namespace Aura.Channel.Util.Configuration.Files
 
 		public bool PrivateDungeons { get; protected set; }
 		public bool EasySwitch { get; protected set; }
+
+		public float PartyExpBonus { get; protected set; }
+		public int PartyMaxSize { get; protected set; }
 
 		public void Load()
 		{
@@ -79,6 +84,7 @@ namespace Aura.Channel.Util.Configuration.Files
 			this.NoDurabilityLoss = this.GetBool("no_durability_loss", false);
 			this.UnlimitedUpgrades = this.GetBool("unlimited_upgrades", false);
 			this.UncapProficiency = this.GetBool("uncap_proficiency", false);
+			this.UnlimitedDyes = this.GetBool("unlimited_dyes", false);
 
 			this.RebirthTime = TimeSpan.FromDays(this.GetInt("rebirth_time", 6));
 
@@ -88,6 +94,9 @@ namespace Aura.Channel.Util.Configuration.Files
 
 			this.PrivateDungeons = this.GetBool("private_dungeons", false);
 			this.EasySwitch = this.GetBool("easy_switch", false);
+
+			this.PartyExpBonus = this.GetFloat("party_exp_bonus", 0);
+			this.PartyMaxSize = Math2.Clamp(1, 99, this.GetInt("party_max_size", 8));
 		}
 	}
 }

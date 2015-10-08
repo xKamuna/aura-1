@@ -2,12 +2,14 @@
 // For more information, see license file in the main folder
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Aura.Mabi.Const;
 using Aura.Channel.Scripting.Scripts;
 using Aura.Shared.Util;
 using System;
 using Aura.Channel.Network.Sending;
+using Aura.Data.Database;
 
 namespace Aura.Channel.World.Entities
 {
@@ -138,6 +140,59 @@ namespace Aura.Channel.World.Entities
 		}
 
 		/// <summary>
+		/// Creates new NPC from actor data.
+		/// </summary>
+		/// <param name="actorData"></param>
+		public NPC(ActorData actorData)
+			: this(actorData.RaceId)
+		{
+			if (actorData.HasColors)
+			{
+				this.Color1 = actorData.Color1;
+				this.Color2 = actorData.Color2;
+				this.Color3 = actorData.Color3;
+			}
+
+			this.Height = actorData.Height;
+			this.Weight = actorData.Weight;
+			this.Upper = actorData.Upper;
+			this.Lower = actorData.Lower;
+			this.EyeColor = (byte)actorData.EyeColor;
+			this.EyeType = (short)actorData.EyeType;
+			this.MouthType = (byte)actorData.MouthType;
+			this.SkinColor = (byte)actorData.SkinColor;
+
+			if (actorData.FaceItemId != 0)
+			{
+				var face = new Item(actorData.FaceItemId);
+				face.Info.Color1 = (byte)actorData.SkinColor;
+				this.Inventory.Add(face, Pocket.Face);
+			}
+			if (actorData.HairItemId != 0)
+			{
+				var hair = new Item(actorData.HairItemId);
+				hair.Info.Color1 = actorData.HairColor;
+				this.Inventory.Add(hair, Pocket.Hair);
+			}
+
+			foreach (var itemData in actorData.Items)
+			{
+				var item = new Item(itemData.ItemId);
+
+				if (itemData.HasColors)
+				{
+					item.Info.Color1 = itemData.Color1;
+					item.Info.Color2 = itemData.Color2;
+					item.Info.Color3 = itemData.Color3;
+				}
+
+				var pocket = (Pocket)itemData.Pocket;
+				if (pocket != Pocket.None)
+					this.Inventory.Add(item, pocket);
+			}
+		}
+
+		/// <summary>
 		/// Disposes AI.
 		/// </summary>
 		public override void Dispose()
@@ -235,9 +290,54 @@ namespace Aura.Channel.World.Entities
 
 			// Exp
 			var exp = (long)(this.RaceData.Exp * ChannelServer.Instance.Conf.World.ExpRate);
-			killer.GiveExp(exp);
+			var expRule = killer.Party.ExpRule;
 
-			Send.CombatMessage(killer, "+{0} EXP", exp);
+			if (!killer.IsInParty || expRule == PartyExpSharing.AllToFinish)
+			{
+				killer.GiveExp(exp);
+				Send.CombatMessage(killer, "+{0} EXP", exp);
+			}
+			else
+			{
+				var members = killer.Party.GetMembers();
+				var eaExp = 0L;
+				var killerExp = 0L;
+				var killerPos = killer.GetPosition();
+
+				// Apply optional exp bonus
+				if (members.Length > 1)
+				{
+					var extra = members.Length - 1;
+					var bonus = ChannelServer.Instance.Conf.World.PartyExpBonus;
+
+					exp += (long)(exp * ((extra * bonus) / 100f));
+				}
+
+				// Official simply ALWAYS divides by party member total,
+				// even if they cannot recieve the experience.
+				if (expRule == PartyExpSharing.Equal)
+				{
+					eaExp = exp / members.Length;
+					killerExp = eaExp;
+				}
+				else if (expRule == PartyExpSharing.MoreToFinish)
+				{
+					exp /= 2;
+					eaExp = exp / members.Length;
+					killerExp = exp;
+				}
+
+				// Killer's exp
+				killer.GiveExp(killerExp);
+				Send.CombatMessage(killer, "+{0} EXP", killerExp);
+
+				// Exp for members in range of killer, the range is unofficial
+				foreach (var member in members.Where(a => a != killer && a.GetPosition().InRange(killerPos, 3000)))
+				{
+					member.GiveExp(eaExp);
+					Send.CombatMessage(member, "+{0} EXP", eaExp);
+				}
+			}
 		}
 
 		/// <summary>

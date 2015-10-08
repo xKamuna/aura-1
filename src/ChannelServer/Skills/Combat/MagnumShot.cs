@@ -87,6 +87,8 @@ namespace Aura.Channel.Skills.Combat
 
 			Send.SkillReady(creature, skill.Info.Id);
 
+			creature.Lock(Locks.Run);
+
 			return true;
 		}
 
@@ -143,6 +145,8 @@ namespace Aura.Channel.Skills.Combat
 			var rnd = RandomProvider.Get();
 			if (rnd.NextDouble() * 100 < chance)
 			{
+				target.StopMove();
+
 				aAction.Set(AttackerOptions.KnockBackHit2);
 
 				var tAction = new TargetAction(CombatActionType.TakeHit, target, attacker, skill.Info.Id);
@@ -197,7 +201,7 @@ namespace Aura.Channel.Skills.Combat
 			}
 
 			// Reduce arrows
-			if (attacker.Magazine != null && !ChannelServer.Instance.Conf.World.InfiniteArrows)
+			if (attacker.Magazine != null && !ChannelServer.Instance.Conf.World.InfiniteArrows && !attacker.Magazine.HasTag("/unlimited_arrow/"))
 				attacker.Inventory.Decrement(attacker.Magazine);
 
 			// Disable fire arrow effect

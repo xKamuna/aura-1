@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoginServer", "src\LoginServer\LoginServer.csproj", "{3C2D0134-1F31-45FC-9622-CDD28F17BCCE}"
 EndProject
@@ -18,6 +18,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mabi", "src\Mabi\Mabi.csproj", "{68361442-6AD0-4334-816C-C719652F1909}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.ChannelServer", "src\Test.ChannelServer\Test.ChannelServer.csproj", "{527345E3-44AD-4947-9C2D-8320CB236A3C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Mabi", "src\Test.Mabi\Test.Mabi.csproj", "{A4FCA69F-A1D9-48C6-BBA5-BD38D0D411A2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -109,6 +111,16 @@ Global
 		{527345E3-44AD-4947-9C2D-8320CB236A3C}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{527345E3-44AD-4947-9C2D-8320CB236A3C}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{527345E3-44AD-4947-9C2D-8320CB236A3C}.Release|x86.ActiveCfg = Release|Any CPU
+		{A4FCA69F-A1D9-48C6-BBA5-BD38D0D411A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4FCA69F-A1D9-48C6-BBA5-BD38D0D411A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4FCA69F-A1D9-48C6-BBA5-BD38D0D411A2}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{A4FCA69F-A1D9-48C6-BBA5-BD38D0D411A2}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{A4FCA69F-A1D9-48C6-BBA5-BD38D0D411A2}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A4FCA69F-A1D9-48C6-BBA5-BD38D0D411A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4FCA69F-A1D9-48C6-BBA5-BD38D0D411A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4FCA69F-A1D9-48C6-BBA5-BD38D0D411A2}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{A4FCA69F-A1D9-48C6-BBA5-BD38D0D411A2}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{A4FCA69F-A1D9-48C6-BBA5-BD38D0D411A2}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

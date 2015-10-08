@@ -95,6 +95,7 @@
     <Compile Include="Network\Handlers\Items.cs" />
     <Compile Include="Network\Handlers\GMCP.cs" />
     <Compile Include="Network\Handlers\Tamed.cs" />
+    <Compile Include="Network\Handlers\Parties.cs" />
     <Compile Include="Network\Handlers\Pets.cs" />
     <Compile Include="Network\Handlers\Props.cs" />
     <Compile Include="Network\Handlers\Quests.cs" />
@@ -109,6 +110,7 @@
     <Compile Include="Network\Sending\Helpers\CreatureHelper.cs" />
     <Compile Include="Network\Sending\Helpers\EntityHelper.cs" />
     <Compile Include="Network\Sending\Helpers\ItemHelper.cs" />
+    <Compile Include="Network\Sending\Helpers\PartyHelper.cs" />
     <Compile Include="Network\Sending\Helpers\PropHelper.cs" />
     <Compile Include="Network\Sending\Helpers\PvpHelper.cs" />
     <Compile Include="Network\Sending\Helpers\QuestHelper.cs" />
@@ -116,6 +118,7 @@
     <Compile Include="Network\Sending\Helpers\TalentHelper.cs" />
     <Compile Include="Network\Sending\Send.Dungeons.cs" />
     <Compile Include="Network\Sending\Send.GMCP.cs" />
+    <Compile Include="Network\Sending\Send.Parties.cs" />
     <Compile Include="Network\Sending\Send.Quests.cs" />
     <Compile Include="Network\Sending\Send.Effects.cs" />
     <Compile Include="Network\Sending\Send.Pets.cs" />
@@ -167,12 +170,15 @@
     <Compile Include="Skills\Combat\MagnumShot.cs" />
     <Compile Include="Skills\Combat\RangedAttack.cs" />
     <Compile Include="Skills\Combat\Smash.cs" />
+    <Compile Include="Skills\Combat\Stomp.cs" />
     <Compile Include="Skills\Combat\SuperWindmill.cs" />
     <Compile Include="Skills\Combat\Windmill.cs" />
     <Compile Include="Skills\Hidden\BigBlessingWaterKit.cs" />
     <Compile Include="Skills\Hidden\Blessing.cs" />
     <Compile Include="Skills\Hidden\Dye.cs" />
     <Compile Include="Skills\Combat\AdministrativePicking2.cs" />
+    <Compile Include="Skills\Actions\DiceTossing.cs" />
+    <Compile Include="Skills\Hidden\NameColorChange.cs" />
     <Compile Include="Skills\Life\Campfire.cs" />
     <Compile Include="Skills\Life\FirstAid.cs" />
     <Compile Include="Skills\Life\Fishing.cs" />
@@ -255,13 +261,16 @@
     <Compile Include="World\Entities\Pet.cs" />
     <Compile Include="World\Entities\PlayerCreature.cs" />
     <Compile Include="World\Entities\Prop.cs" />
-    <Compile Include="World\Entities\PropExtension.cs" />
+    <Compile Include="World\Entities\Props\PropExtension.cs" />
+    <Compile Include="World\Entities\Props\PropExtensionManager.cs" />
     <Compile Include="World\EventManager.cs" />
     <Compile Include="World\Inventory\BankInventory.cs" />
     <Compile Include="World\Inventory\CreatureInventory.cs" />
     <Compile Include="World\Inventory\InventoryPockets.cs" />
     <Compile Include="World\Location.cs" />
+    <Compile Include="World\Party.cs" />
     <Compile Include="World\NormalRegion.cs" />
+    <Compile Include="World\PartyManager.cs" />
     <Compile Include="World\Position.cs" />
     <Compile Include="World\Quests\Objectives.cs" />
     <Compile Include="World\Quests\Prerequisites.cs" />

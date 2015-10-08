@@ -104,6 +104,10 @@ namespace Aura.Channel.Network
 		/// </summary>
 		public override void CleanUp()
 		{
+			// Moved here to always be called when a client is being killed off.
+			if (this.Controlling != null)
+				ChannelServer.Instance.Events.OnPlayerDisconnect(this.Controlling);
+
 			// Dispose creatures, to remove subscriptions and stuff.
 			// Do this before unspawning, the creature might need the region.
 			foreach (var creature in this.Creatures.Values)
@@ -121,7 +125,7 @@ namespace Aura.Channel.Network
 				if (creature.Region is DynamicRegion)
 					newLocation = creature.FallbackLocation;
 
-				// Use fallback location if creature is in a temp region.
+				// Use dungeon exit as fallback location if in a dungeon.
 				var dungeonRegion = creature.Region as DungeonRegion;
 				if (dungeonRegion != null)
 				{

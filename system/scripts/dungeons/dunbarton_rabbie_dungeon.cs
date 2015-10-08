@@ -30,18 +30,11 @@ public class RabbieDungeonScript : DungeonScript
 		{
 			dungeon.AddBoss(10101, 1); // Goblin
 
-			foreach (var member in dungeon.Party)
-			{
-				var cutscene = new Cutscene("bossroom_GoldGoblin", member);
-				cutscene.AddActor("me", member);
-				cutscene.AddActor("#gold_goblin", 10104);
-				cutscene.AddActor("#goblin_archer", 10103);
-				cutscene.Play();
-			}
+			dungeon.PlayCutscene("bossroom_GoldGoblin");
 		}
 	}
 
-	public override void OnBossDeath(Dungeon dungeon, Creature boss)
+	public override void OnBossDeath(Dungeon dungeon, Creature boss, Creature killer)
 	{
 		if (boss.RaceId != 10101)
 			return;

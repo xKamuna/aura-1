@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Aura development team - Licensed under GNU GPL
 // For more information, see license file in the main folder
 
+using System.Reflection;
 namespace Aura.Mabi.Network
 {
 	/// <summary>
@@ -256,6 +257,8 @@ namespace Aura.Mabi.Network
 		public const int NpcShopSellItemR = 0x7153;
 		public const int ClearNpcShop = 0x7158; // Empties tabs
 		public const int AddToNpcShop = 0x7159; // Adds items while shop is open, works like open
+		public const int OpenShopRemotely = 0x715C; // ?
+		public const int OpenShopRemotelyR = 0x715D; // ?
 		public const int OpenNpcShop = 0x715E;
 		public const int RequestBankTabs = 0x7211;
 		public const int OpenBank = 0x7212;
@@ -299,6 +302,7 @@ namespace Aura.Mabi.Network
 		public const int UnkCombatR = 0x791C; // ?
 		public const int CombatSetAim = 0x791D;
 		public const int CombatSetAimR = 0x791E;
+		public const int CombatSetAim2 = 0x791F;
 		public const int SetCombatTarget = 0x7920;
 		public const int SetFinisher = 0x7921;
 		public const int SetFinisher2 = 0x7922;
@@ -318,6 +322,8 @@ namespace Aura.Mabi.Network
 		public const int CompleteQuestR = 0x8CA4;
 		public const int GiveUpQuest = 0x8CA5;
 		public const int GiveUpQuestR = 0x8CA6;
+		public const int SquadUnk = 0x8D6E;
+		public const int SquadUnkR = 0x8D6F;
 		public const int QuestStartPtj = 0x8D68;
 		public const int QuestEndPtj = 0x8D69;
 		public const int QuestUpdatePtj = 0x8D6A;
@@ -341,6 +347,7 @@ namespace Aura.Mabi.Network
 		public const int PartyChangeLeader = 0x8EA5;
 		public const int PartyChangeLeaderR = 0x8EA6;
 		public const int PartyChangeLeaderUpdate = 0x8EA7;
+		public const int PartyChat = 0x8EA8;
 		public const int PartyWantedShow = 0x8EA9;
 		public const int PartyWantedShowR = 0x8EAA;
 		public const int PartyWantedOpened = 0x8EAB;
@@ -353,6 +360,8 @@ namespace Aura.Mabi.Network
 		public const int PartyChangeExp = 0x8EB8;
 		public const int PartyChangeExpR = 0x8EB9;
 		public const int PartyExpUpdate = 0x8EBA;
+		public const int PartyBoardRequest = 0x8EBD;
+		public const int PartyBoardRequestR = 0x8EBE;
 		public const int GuildInfoNoGuild = 0x8EFB;
 		public const int OpenGuildPanel = 0x8EFC;
 		public const int GuildInfo = 0x8EFD;
@@ -412,6 +421,9 @@ namespace Aura.Mabi.Network
 		public const int DungeonInfo = 0x9470;
 		public const int EnterDynamicRegion = 0x9571; // Creates one dynamic region and warps there
 		public const int RemoveDynamicRegion = 0x9572;
+		public const int Inquiry = 0x9664;
+		public const int InquiryResponse = 0x9665;
+		public const int InquiryResponseR = 0x9666;
 		public const int ArenaRoundInfo = 0x9667;
 		public const int ArenaRoundInfoCancel = 0x9668;
 		public const int AgeUpEffect = 0x9858;
@@ -454,6 +466,9 @@ namespace Aura.Mabi.Network
 		public const int GetPetAi = 0xA8A2;
 		public const int GetPetAiR = 0xA8A3;
 		public const int WarpUnk3 = 0xA8AF;
+		public const int SetQuestTimer = 0xA8CF; // Was 0xA8D0 on RE (G13)
+		public const int RemoveQuestTimer = 0xA8D0; // ?
+		public const int UpdateQuestTimerCounter = 0xA8D1;
 		public const int UmbrellaJump = 0xA8E0;
 		public const int UmbrellaJumpR = 0xA8E1;
 		public const int UmbrellaLand = 0xA8E2;
@@ -462,6 +477,9 @@ namespace Aura.Mabi.Network
 		public const int TamedControlAcknowledged = 0xA96E;
 		public const int EnterDynamicRegionExtended = 0xA97E; // Creates multiple dynamic regions and warps to one
 		public const int EnableRoyalAlchemist = 0xA9A3;
+		public const int SpinColorWheel = 0xA9A5;
+		public const int SpinColorWheelR = 0xA9A6;
+		public const int ChangeNameColor = 0xA9A7;
 		public const int SosButtonRequest = 0xA9A9;
 		public const int SosButtonRequestR = 0xA9AA;
 		public const int SkillTeleport = 0xA9F0;
@@ -556,6 +574,65 @@ namespace Aura.Mabi.Network
 		public const int Walking = 0x0FD13021;
 		public const int Walk = 0x0FF23431;
 
+		// Messenger Server
+		// ------------------------------------------------------------------
+		public static class Msgr
+		{
+			public const int Login = 0xC350;
+			public const int LoginR = 0xC351;
+			public const int FriendInvite = 0xC352;
+			public const int FriendInviteR = 0xC353;
+			public const int FriendConfirm = 0xC354;
+			public const int FriendReply = 0xC355;
+			public const int ChatInvite = 0xC356;
+			public const int FriendListRequest = 0xC358;
+			public const int FriendListRequestR = 0xC359;
+			public const int FriendBlock = 0xC35A;
+			public const int FriendBlockR = 0xC35B;
+			public const int FriendUnblock = 0xC35C;
+			public const int FriendUnblockR = 0xC35D;
+			public const int FriendOnline = 0xC35E;
+			public const int FriendOffline = 0xC35F;
+
+			public const int ChatBegin = 0xC360;
+			public const int ChatBeginR = 0xC361;
+			public const int ChatEnd = 0xC362;
+			public const int ChatInviteR = 0xC366;
+			public const int ChatLeave = 0xC367;
+			public const int Chat = 0xC368;
+			public const int ChatR = 0xC36A;
+			public const int DeleteFriend = 0xC36B;
+			public const int ChatJoin = 0xC36C;
+			public const int GuildChat = 0xC36E;
+			public const int GuildChatR = 0xC36F;
+
+			public const int ChangeOptions = 0xC370;
+			public const int ChangeOptionsR = 0xC371;
+			public const int FriendOptionChanged = 0xC372;
+			public const int GroupList = 0xC376;
+			public const int AddGroup = 0xC377;
+			public const int DeleteGroup = 0xC379;
+			public const int RenameGroup = 0xC37B;
+			public const int ChangeGroup = 0xC37D;
+			public const int SendNote = 0xC37E;
+			public const int SendNoteR = 0xC37F;
+
+			public const int NoteListRequest = 0xC380;
+			public const int NoteListRequestR = 0xC381;
+			public const int DeleteNote = 0xC382;
+			public const int CheckNotes = 0xC384;
+			public const int YouGotNote = 0xC385;
+			public const int ReadNote = 0xC386;
+			public const int ReadNoteR = 0xC387;
+			public const int ChangeChannel = 0xC389;
+			public const int FriendChannelChanged = 0xC38A;
+			public const int GuildMemberList = 0xC38B;
+			public const int GuildMemberListR = 0xC38C;
+			public const int GuildMemberState = 0xC38D;
+
+			public const int PlayerBlock = 0xC392;
+		}
+
 		// Internal communication
 		// ------------------------------------------------------------------
 		public static class Internal
@@ -566,6 +643,30 @@ namespace Aura.Mabi.Network
 			public const int ChannelStatus = 0x42420101;
 
 			public const int BroadcastNotice = 0x42420201;
+		}
+
+		/// <summary>
+		/// Returns name of op code, if it's defined.
+		/// </summary>
+		/// <param name="op"></param>
+		/// <returns></returns>
+		public static string GetName(int op)
+		{
+			// Login/Channel
+			foreach (var field in typeof(Op).GetFields(BindingFlags.Public | BindingFlags.Static))
+			{
+				if ((int)field.GetValue(null) == op)
+					return field.Name;
+			}
+
+			// Msgr
+			foreach (var field in typeof(Op.Msgr).GetFields(BindingFlags.Public | BindingFlags.Static))
+			{
+				if ((int)field.GetValue(null) == op)
+					return "Msgr." + field.Name;
+			}
+
+			return "?";
 		}
 	}
 

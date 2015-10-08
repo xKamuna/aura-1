@@ -858,6 +858,16 @@ namespace Aura.Channel.Scripting.Scripts
 		}
 
 		/// <summary>
+		/// Adds item to player's inventory and shows an acquire window.
+		/// </summary>
+		/// <param name="itemId"></param>
+		public void AcquireItem(int itemId)
+		{
+			var item = new Item(itemId);
+			this.Player.AcquireItem(item);
+		}
+
+		/// <summary>
 		/// Adds given amount of gold to the player's inventory.
 		/// </summary>
 		/// <param name="itemId"></param>
@@ -1490,9 +1500,9 @@ namespace Aura.Channel.Scripting.Scripts
 			{
 				var useRate = rate;
 
-				// Holy Water (+1%?)
+				// Holy Water
 				if (result.Item.IsBlessed)
-					useRate += 1;
+					useRate = 100 - ((100 - useRate) / 2);
 
 				// Success
 				if (this.Random(100) < useRate)

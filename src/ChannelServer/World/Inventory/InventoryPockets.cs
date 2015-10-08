@@ -92,15 +92,17 @@ namespace Aura.Channel.World.Inventory
 		/// Returns first item to match predicate, or null.
 		/// </summary>
 		/// <param name="predicate"></param>
+		/// <param name="startAt"></param>
 		/// <returns></returns>
-		public abstract Item GetItem(Func<Item, bool> predicate);
+		public abstract Item GetItem(Func<Item, bool> predicate, StartAt startAt);
 
 		/// <summary>
 		/// Returns items that match predicate.
 		/// </summary>
 		/// <param name="predicate"></param>
+		/// <param name="startAt"></param>
 		/// <returns></returns>
-		public abstract List<Item> GetItems(Func<Item, bool> predicate);
+		public abstract List<Item> GetItems(Func<Item, bool> predicate, StartAt startAt);
 
 		/// <summary>
 		/// Removes items by item id and amount. Modified items are returned
@@ -161,7 +163,22 @@ namespace Aura.Channel.World.Inventory
 			if (collidingItems.Count > 0)
 				collidingItem = collidingItems[0];
 
-			if (collidingItem != null && ((collidingItem.Data.StackType == StackType.Sac && (collidingItem.Data.StackItem == newItem.Info.Id || collidingItem.Data.StackItem == newItem.Data.StackItem)) || (newItem.Data.StackType == StackType.Stackable && newItem.Info.Id == collidingItem.Info.Id)))
+			if (collidingItem != null && (
+				// Colliding item is sac and new item can fill be put into it
+				(collidingItem.Data.StackType == StackType.Sac && collidingItem.Data.StackItem != 0 && (collidingItem.Data.StackItem == newItem.Info.Id || collidingItem.Data.StackItem == newItem.Data.StackItem)) ||
+
+				// Colliding item is a quiver (general arrow sac) that
+				// a regular arrow can be put into.
+				// Corner case, due to quiver being a sac without stack item id,
+				// instead of a stackable for some reason. They possibly wanted
+				// to be able to put different kinds of arrows into it,
+				// otherwise they probably would have made it stackable or
+				// specified a stack item id.
+				(collidingItem.HasTag("/largearrowsac/") && newItem.HasTag("/arrow_bag_bundle/")) ||
+
+				// Item is stackable and can be put into the colliding stack
+				(newItem.Data.StackType == StackType.Stackable && newItem.Info.Id == collidingItem.Info.Id))
+			)
 			{
 				if (collidingItem.Info.Amount < collidingItem.Data.StackMax)
 				{
@@ -431,16 +448,61 @@ namespace Aura.Channel.World.Inventory
 			get { return _items.Count; }
 		}
 
-		public override Item GetItem(Func<Item, bool> predicate)
+		public override Item GetItem(Func<Item, bool> predicate, StartAt startAt)
 		{
-			// TODO: Search from bottom right
-			return _items.Values.FirstOrDefault(predicate);
+			if (startAt == StartAt.Random)
+				return _items.Values.FirstOrDefault(predicate);
+
+			for (int y = 0; y < _height; ++y)
+			{
+				for (int x = 0; x < _width; ++x)
+				{
+					// Reverse index for bottom right start point
+					var item = startAt == StartAt.TopLeft
+						? _map[x, y]
+						: _map[_width - 1 - x, _height - 1 - y];
+
+					// Skip empty slots
+					if (item == null)
+						continue;
+
+					// Take item if it matches predicate
+					if (predicate(item))
+						return item;
+				}
+			}
+
+			return null;
 		}
 
-		public override List<Item> GetItems(Func<Item, bool> predicate)
+		public override List<Item> GetItems(Func<Item, bool> predicate, StartAt startAt)
 		{
-			// TODO: Search from bottom right
-			return _items.Values.Where(predicate).ToList();
+			if (startAt == StartAt.Random)
+				return _items.Values.Where(predicate).ToList();
+
+			var result = new List<Item>();
+
+			for (int y = 0; y < _height; ++y)
+			{
+				for (int x = 0; x < _width; ++x)
+				{
+					// Reverse index for bottom right start point
+					var item = startAt == StartAt.TopLeft
+						? _map[x, y]
+						: _map[_width - 1 - x, _height - 1 - y];
+
+					// Skip empty slots
+					if (item == null)
+						continue;
+
+					// An item can occupy more than one spot on the map,
+					// make sure it's only added once.
+					if (predicate(item) && !result.Contains(item))
+						result.Add(item);
+				}
+			}
+
+			return result;
 		}
 	}
 
@@ -561,7 +623,7 @@ namespace Aura.Channel.World.Inventory
 			get { return (_item != null ? 1 : 0); }
 		}
 
-		public override Item GetItem(Func<Item, bool> predicate)
+		public override Item GetItem(Func<Item, bool> predicate, StartAt startAt)
 		{
 			if (_item != null && predicate(_item))
 				return _item;
@@ -569,7 +631,7 @@ namespace Aura.Channel.World.Inventory
 			return null;
 		}
 
-		public override List<Item> GetItems(Func<Item, bool> predicate)
+		public override List<Item> GetItems(Func<Item, bool> predicate, StartAt startAt)
 		{
 			var result = new List<Item>();
 
@@ -662,14 +724,21 @@ namespace Aura.Channel.World.Inventory
 			get { return _items.Count; }
 		}
 
-		public override Item GetItem(Func<Item, bool> predicate)
+		public override Item GetItem(Func<Item, bool> predicate, StartAt startAt)
 		{
 			return _items.FirstOrDefault(predicate);
 		}
 
-		public override List<Item> GetItems(Func<Item, bool> predicate)
+		public override List<Item> GetItems(Func<Item, bool> predicate, StartAt startAt)
 		{
 			return _items.Where(predicate).ToList();
 		}
+	}
+
+	public enum StartAt
+	{
+		Random,
+		BottomRight,
+		TopLeft,
 	}
 }

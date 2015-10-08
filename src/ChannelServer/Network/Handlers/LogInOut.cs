@@ -214,6 +214,40 @@ namespace Aura.Channel.Network.Handlers
 
 				if (lastAging < lastSaturday)
 					playerCreature.AgeUp((short)(1 + diff / 7));
+
+				// Name/Chat color conditions
+				if (creature.Vars.Perm["NameColorEnd"] != null)
+				{
+					var dt = (DateTime)creature.Vars.Perm["NameColorEnd"];
+					if (DateTime.Now > dt)
+					{
+						creature.Vars.Perm["NameColorIdx"] = null;
+						creature.Vars.Perm["NameColorEnd"] = null;
+					}
+				}
+				if (creature.Vars.Perm["ChatColorEnd"] != null)
+				{
+					var dt = (DateTime)creature.Vars.Perm["ChatColorEnd"];
+					if (DateTime.Now > dt)
+					{
+						creature.Vars.Perm["ChatColorIdx"] = null;
+						creature.Vars.Perm["ChatColorEnd"] = null;
+					}
+				}
+				if (creature.Vars.Perm["NameColorIdx"] != null)
+				{
+					var extra = new MabiDictionary();
+					extra.SetInt("IDX", (int)creature.Vars.Perm["NameColorIdx"]);
+
+					creature.Conditions.Activate(ConditionsB.NameColorChange, extra);
+				}
+				if (creature.Vars.Perm["ChatColorIdx"] != null)
+				{
+					var extra = new MabiDictionary();
+					extra.SetInt("IDX", (int)creature.Vars.Perm["ChatColorIdx"]);
+
+					creature.Conditions.Activate(ConditionsB.ChatColorChange, extra);
+				}
 			}
 		}
 
@@ -230,8 +264,6 @@ namespace Aura.Channel.Network.Handlers
 		public void DisconnectRequest(ChannelClient client, Packet packet)
 		{
 			var unk1 = packet.GetByte(); // 1 | 2 (maybe login vs exit?)
-
-			ChannelServer.Instance.Events.OnPlayerDisconnect(client.Controlling);
 
 			Log.Info("'{0}' is closing the connection. Saving...", client.Account.Id);
 

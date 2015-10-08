@@ -33,6 +33,7 @@ namespace Aura.Channel.Util
 			Add(00, 50, "where", "", HandleWhere);
 			Add(00, 50, "cp", "", HandleCp);
 			Add(00, 50, "distance", "", HandleDistance);
+			Add(00, 50, "partysize", "<size>", HandlePartySize);
 
 			// VIPs
 			Add(01, 50, "go", "<location>", HandleGo);
@@ -49,6 +50,9 @@ namespace Aura.Channel.Util
 			Add(01, 50, "motion", "<category> <motion>", HandleMotion);
 			Add(01, 50, "gesture", "<gesture>", HandleGesture);
 			Add(01, 50, "lasttown", "", HandleLastTown);
+			Add(01, 50, "cutscene", "<name>", HandleCutscene);
+			Add(01, 50, "openshop", "<name>", HandleOpenShop);
+			Add(01, 50, "nccolor", "<id (0-32)>", HandleNameChatColor);
 
 			// GMs
 			Add(50, 50, "warp", "<region> [x] [y]", HandleWarp);
@@ -803,7 +807,11 @@ namespace Aura.Channel.Util
 			if (speed == 0)
 				target.Conditions.Deactivate(ConditionsC.Hurry);
 			else
-				target.Conditions.Activate(ConditionsC.Hurry, speed);
+			{
+				var extra = new MabiDictionary();
+				extra.SetShort("VAL", speed);
+				target.Conditions.Activate(ConditionsC.Hurry, extra);
+			}
 
 			Send.ServerMessage(sender, Localization.Get("Speed changed to +{0}%."), speed);
 			if (sender != target)
@@ -1669,6 +1677,110 @@ namespace Aura.Channel.Util
 
 				Send.ServerMessage(target, Localization.Get("You now have control over '{0:X16}' ({1})."), npc.EntityId, npc.RaceData.Name);
 			}
+
+			return CommandResult.Okay;
+		}
+
+		private CommandResult HandleCutscene(ChannelClient client, Creature sender, Creature target, string message, IList<string> args)
+		{
+			if (args.Count < 2)
+				return CommandResult.InvalidArgument;
+
+			if (!AuraData.CutscenesDb.Exists(args[1]))
+			{
+				Send.ServerMessage(sender, Localization.Get("Cutscene not found."));
+				return CommandResult.Okay;
+			}
+
+			Cutscene.Play(args[1], target);
+
+			return CommandResult.Okay;
+		}
+
+		private CommandResult HandlePartySize(ChannelClient client, Creature sender, Creature target, string message, IList<string> args)
+		{
+			if (args.Count < 2)
+				return CommandResult.InvalidArgument;
+
+			int size;
+			if (!int.TryParse(args[1], out size))
+				return CommandResult.InvalidArgument;
+
+			if (!target.IsInParty)
+			{
+				Send.SystemMessage(sender, Localization.Get("Target is not in party."));
+				return CommandResult.Okay;
+			}
+
+			target.Party.SetMaxSize(size);
+
+			Send.SystemMessage(sender, Localization.Get("Changed party size to {0}."), target.Party.MaxSize);
+			if (sender != target)
+				Send.SystemMessage(target, Localization.Get("Party size changed to {0} by {1}."), target.Party.MaxSize, sender.Name);
+
+			return CommandResult.Okay;
+		}
+
+		private CommandResult HandleOpenShop(ChannelClient client, Creature sender, Creature target, string message, IList<string> args)
+		{
+			if (args.Count < 2)
+				return CommandResult.InvalidArgument;
+
+			var typeName = args[1];
+
+			// Get shop
+			var shop = ChannelServer.Instance.ScriptManager.NpcShopScripts.Get(typeName);
+			if (shop == null)
+			{
+				Send.ServerMessage(sender, Localization.Get("Unable to find shop '{0}'."), typeName);
+				return CommandResult.Okay;
+			}
+
+			shop.OpenRemotelyFor(target);
+
+			Send.SystemMessage(sender, Localization.Get("Opened shop '{0}'."), typeName);
+
+			return CommandResult.Okay;
+		}
+
+		private CommandResult HandleNameChatColor(ChannelClient client, Creature sender, Creature target, string message, IList<string> args)
+		{
+			var idx = 0;
+
+			if (args.Count > 1)
+			{
+				if (!int.TryParse(args[1], out idx) || !Math2.Between(idx, 0, 32))
+					return CommandResult.InvalidArgument;
+			}
+
+			if (idx == 0)
+			{
+				target.Vars.Perm["NameColorIdx"] = null;
+				target.Vars.Perm["NameColorEnd"] = null;
+				target.Vars.Perm["ChatColorIdx"] = null;
+				target.Vars.Perm["ChatColorEnd"] = null;
+
+				target.Conditions.Deactivate(ConditionsB.NameColorChange);
+				target.Conditions.Deactivate(ConditionsB.ChatColorChange);
+			}
+			else
+			{
+				target.Vars.Perm["NameColorIdx"] = idx;
+				target.Vars.Perm["ChatColorIdx"] = idx;
+				target.Vars.Perm["NameColorEnd"] = null;
+				target.Vars.Perm["ChatColorEnd"] = null;
+
+				var extra = new MabiDictionary();
+				extra.SetInt("IDX", idx);
+
+				target.Conditions.Activate(ConditionsB.NameColorChange, extra);
+				target.Conditions.Activate(ConditionsB.ChatColorChange, extra);
+			}
+
+			if (sender == target)
+				Send.SystemMessage(target, Localization.Get("Your name/chat color has been changed."));
+			else
+				Send.SystemMessage(target, Localization.Get("Your name/chat color has been changed by {0}."), sender.Name);
 
 			return CommandResult.Okay;
 		}

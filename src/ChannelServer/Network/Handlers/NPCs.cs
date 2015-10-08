@@ -40,6 +40,7 @@ namespace Aura.Channel.Network.Handlers
 			// Check lock
 			if (!creature.Can(Locks.TalkToNpc))
 			{
+				Log.Debug("TalkToNpc locked for '{0}'.", creature.Name);
 				Send.NpcTalkStartR_Fail(creature);
 				return;
 			}
@@ -112,9 +113,13 @@ namespace Aura.Channel.Network.Handlers
 			var creature = client.GetCreatureSafe(packet.Id);
 
 			// Check session
-			if (!client.NpcSession.IsValid(npcId))
+			if (!client.NpcSession.IsValid(npcId) && creature.Temp.CurrentShop == null)
 			{
 				Log.Warning("Player '{0}' tried ending invalid NPC session.", creature.Name);
+
+				// Don't return, there's no harm in closing a dialog,
+				// and the player could get stuck because of a bug or
+				// something.
 				//return;
 			}
 
@@ -239,7 +244,8 @@ namespace Aura.Channel.Network.Handlers
 			var creature = client.GetCreatureSafe(packet.Id);
 
 			// Check session
-			client.NpcSession.EnsureValid();
+			// Not compatible with remote shop access, unless we bind it to NPCs.
+			//client.NpcSession.EnsureValid();
 
 			// Check open shop
 			if (creature.Temp.CurrentShop == null)
@@ -310,7 +316,8 @@ namespace Aura.Channel.Network.Handlers
 			var creature = client.GetCreatureSafe(packet.Id);
 
 			// Check session
-			client.NpcSession.EnsureValid();
+			// Not compatible with remote shop access, unless we bind it to NPCs.
+			//client.NpcSession.EnsureValid();
 
 			// Check open shop
 			if (creature.Temp.CurrentShop == null)

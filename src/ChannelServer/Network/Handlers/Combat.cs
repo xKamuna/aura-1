@@ -40,6 +40,8 @@ namespace Aura.Channel.Network.Handlers
 			// Change stance
 			if (creature.Can(Locks.ChanceStance))
 				creature.IsInBattleStance = Convert.ToBoolean(stance);
+			else
+				Log.Debug("ChanceStance locked for '{0}'.", creature.Name);
 
 			// Response (unlocks the char)
 			Send.ChangeStanceRequestR(creature);
@@ -106,13 +108,25 @@ namespace Aura.Channel.Network.Handlers
 		public void CombatAttack(ChannelClient client, Packet packet)
 		{
 			var targetEntityId = packet.GetLong();
-			var unkString = (packet.Peek() == PacketElementType.String ? packet.GetString() : "");
+
+			// This string is in the standard CombatAttack packet,
+			// but the purpose is unknown, and it's not in all CombatAttack
+			// packets.
+			if (packet.Peek() == PacketElementType.String)
+			{
+				var unkString = packet.GetString();
+				if (!string.IsNullOrWhiteSpace(unkString))
+					Log.Info("CombatAttack: Non-empty string, please report this message to the development team. String: " + unkString);
+			}
 
 			var creature = client.GetCreatureSafe(packet.Id);
 
 			// Check lock
 			if (!creature.Can(Locks.Attack))
+			{
+				Log.Debug("Attack locked for '{0}'.", creature.Name);
 				goto L_End;
+			}
 
 			// Check target
 			var target = creature.Region.GetCreature(targetEntityId);

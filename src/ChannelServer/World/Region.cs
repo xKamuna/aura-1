@@ -18,6 +18,8 @@ using Boo.Lang.Compiler.TypeSystem;
 using System.Drawing;
 using Aura.Channel.Scripting.Scripts;
 using Aura.Mabi.Network;
+using Aura.Channel.Scripting;
+using Aura.Channel.World.Entities.Props;
 
 namespace Aura.Channel.World
 {
@@ -71,6 +73,11 @@ namespace Aura.Channel.World
 		public bool IsTemp { get { return (this.IsDynamic || this.IsDungeon); } }
 
 		/// <summary>
+		/// Variable manager containing region's properties.
+		/// </summary>
+		public VariableManager Properties { get; private set; }
+
+		/// <summary>
 		/// Initializes class.
 		/// </summary>
 		/// <param name="regionId"></param>
@@ -93,6 +100,8 @@ namespace Aura.Channel.World
 			_clients = new HashSet<ChannelClient>();
 
 			this.Collisions = new RegionCollision();
+
+			this.Properties = new VariableManager();
 		}
 
 		/// <summary>
@@ -121,7 +130,7 @@ namespace Aura.Channel.World
 
 					// Add copy of extensions
 					foreach (var para in prop.Parameters)
-						add.Extensions.Add(new PropExtension(para.SignalType, para.EventType, para.Name, 0));
+						add.Extensions.AddSilent(new PropExtension(para.SignalType, para.EventType, para.Name, 0));
 
 					// Add drop behaviour if drop type exists
 					var dropType = prop.GetDropType();

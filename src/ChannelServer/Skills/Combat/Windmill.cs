@@ -127,6 +127,7 @@ namespace Aura.Channel.Skills.Combat
 
 			var aAction = new AttackerAction(CombatActionType.SpecialHit, attacker, skill.Info.Id, targetAreaId);
 			aAction.Set(AttackerOptions.Result);
+			aAction.Stun = CombatMastery.GetAttackerStun(attacker.AverageKnockCount, attacker.AverageAttackSpeed, true);
 
 			cap.Add(aAction);
 
@@ -150,7 +151,7 @@ namespace Aura.Channel.Skills.Combat
 				ManaShield.Handle(target, ref damage, tAction);
 
 				// Clean Hit if not defended nor critical
-				if (!tAction.Is(CombatActionType.Defended) && !tAction.Has(TargetOptions.Critical))
+				if (tAction.SkillId != SkillId.Defense && !tAction.Has(TargetOptions.Critical))
 					tAction.Set(TargetOptions.CleanHit);
 
 				// Take damage if any is left
@@ -160,17 +161,15 @@ namespace Aura.Channel.Skills.Combat
 				// Finish if dead, knock down if not defended
 				if (target.IsDead)
 					tAction.Set(TargetOptions.KnockDownFinish);
-				else if (!tAction.Is(CombatActionType.Defended))
+				else if (tAction.SkillId != SkillId.Defense)
 					tAction.Set(TargetOptions.KnockDown);
 
 				// Anger Management
 				if (!target.IsDead)
 					survived.Add(target);
 
-				// Stun & knock back
-				aAction.Stun = CombatMastery.GetAttackerStun(attacker.AverageKnockCount, attacker.AverageAttackSpeed, true);
-
-				if (!tAction.Is(CombatActionType.Defended))
+				// Stun and shove if not defended
+				if (tAction.SkillId != SkillId.Defense)
 				{
 					tAction.Stun = CombatMastery.GetTargetStun(attacker.AverageKnockCount, attacker.AverageAttackSpeed, true);
 					target.Stability = Creature.MinStability;
@@ -193,8 +192,7 @@ namespace Aura.Channel.Skills.Combat
 			// Reduce life in old combat system
 			if (!AuraData.FeaturesDb.IsEnabled("CombatSystemRenewal"))
 			{
-				var tenPercent = attacker.LifeMax / 10;
-				var amount = (attacker.Life < tenPercent ? 2 : tenPercent);
+				var amount = (attacker.LifeMax < 10 ? 2 : attacker.LifeMax / 10);
 				attacker.ModifyLife(-amount);
 
 				// TODO: Invincibility

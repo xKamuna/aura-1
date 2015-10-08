@@ -32,6 +32,9 @@ namespace Aura.Channel.World.Entities
 		private const float MinWeight = 0.7f, MaxWeight = 1.5f;
 		private const float MaxFoodStatBonus = 100;
 
+		private byte _inquiryId;
+		private Dictionary<byte, Action<Creature>> _inquiryCallbacks;
+
 		public override DataType DataType { get { return DataType.Creature; } }
 
 		// General
@@ -351,6 +354,12 @@ namespace Aura.Channel.World.Entities
 		/// </summary>
 		public bool IsKnockedDown { get { return (DateTime.Now < this.KnockDownTime); } }
 
+		/// <summary>
+		/// Returns true if creature is able to run while having ranged loaded,
+		/// e.g. because its and elf or has a crossbow equipped.
+		/// </summary>
+		public bool CanRunWithRanged { get { return (this.IsElf || (this.RightHand != null && this.RightHand.HasTag("/crossbow/"))); } }
+
 		// Stats
 		// ------------------------------------------------------------------
 
@@ -449,7 +458,7 @@ namespace Aura.Channel.World.Entities
 		/// <remarks>
 		/// This seems to count towards the creature's damage even if a weapon
 		/// is equipped. This assumption is based on the fact that Golems
-		/// have a 0 attack weapon, that would make them almost no damage.
+		/// have a 0 attack weapon, that would make them do almost no damage.
 		/// </remarks>
 		public int AttackMaxBase { get { return this.RaceData.AttackMaxBase; } }
 
@@ -734,6 +743,21 @@ namespace Aura.Channel.World.Entities
 
 		// ------------------------------------------------------------------
 
+
+		// Parties
+		// ------------------------------------------------------------------
+
+		public Party Party { get; set; }
+
+		/// <summary>
+		/// The number in the party this player occupies.
+		/// </summary>
+		public int PartyPosition { get; set; }
+
+		public bool IsInParty { get { return this.Party.Id != 0; } }
+
+		// ------------------------------------------------------------------
+
 		protected Creature()
 		{
 			this.Client = new DummyClient();
@@ -750,8 +774,11 @@ namespace Aura.Channel.World.Entities
 			this.Drops = new CreatureDrops(this);
 			this.DeadMenu = new CreatureDeadMenu(this);
 			this.AimMeter = new AimMeter(this);
+			this.Party = Party.CreateDummy(this);
 
 			this.Vars = new ScriptVariables();
+
+			_inquiryCallbacks = new Dictionary<byte, Action<Creature>>();
 		}
 
 		/// <summary>
@@ -770,7 +797,7 @@ namespace Aura.Channel.World.Entities
 				if (this.RaceData == null)
 					throw new Exception("Unable to load race data, race '" + this.RaceId.ToString() + "' not found.");
 
-				Log.Warning("Race '{0}' not found, using human instead.", this.RaceId);
+				Log.Warning("Creature.LoadDefault: Race '{0}' not found, using human instead.", this.RaceId);
 			}
 
 			// Add inventory
@@ -1999,7 +2026,7 @@ namespace Aura.Channel.World.Entities
 		}
 
 		/// <summary>
-		/// Adds item to creature's inventory.
+		/// Adds item to creature's inventory and shows it above head.
 		/// </summary>
 		/// <param name="item"></param>
 		public void GiveItemWithEffect(Item item)
@@ -2009,11 +2036,37 @@ namespace Aura.Channel.World.Entities
 		}
 
 		/// <summary>
+		/// Adds item to creature's inventory and shows an acquire window.
+		/// </summary>
+		/// <param name="item"></param>
+		public void AcquireItem(Item item)
+		{
+			this.GiveItem(item);
+			Send.AcquireItemInfo(this, item.EntityId);
+		}
+
+		/// <summary>
+		/// Removes items with the given id from the creature's inventory.
+		/// </summary>
+		/// <param name="itemId"></param>
+		/// <param name="amount"></param>
+		public void RemoveItem(int itemId, int amount = 1)
+		{
+			this.Inventory.Remove(itemId, amount);
+		}
+
+		/// <summary>
 		/// Activates given Locks for creature.
 		/// </summary>
 		/// <remarks>
 		/// Some locks are lifted automatically on Warp, SkillComplete,
 		/// and SkillCancel.
+		/// 
+		/// Only sending the locks when they actually changed can cause problems,
+		/// e.g. if a lock is removed during a cutscene (skill running out)
+		/// the unlock after the cutscene isn't sent.
+		/// The client actually has counted locks, unlike us atm.
+		/// Implementing those will fix the problem. TODO.
 		/// </remarks>
 		/// <param name="locks">Locks to activate.</param>
 		/// <param name="updateClient">Sends CharacterLock to client if true.</param>
@@ -2023,7 +2076,7 @@ namespace Aura.Channel.World.Entities
 			var prev = this.Locks;
 			this.Locks |= locks;
 
-			if (updateClient && prev != this.Locks)
+			if (updateClient /*&& prev != this.Locks*/)
 				Send.CharacterLock(this, locks);
 
 			return this.Locks;
@@ -2033,7 +2086,7 @@ namespace Aura.Channel.World.Entities
 		/// Deactivates given Locks for creature.
 		/// </summary>
 		/// <remarks>
-		/// Unlocking movement on the client resets skill stuns.
+		/// Unlocking movement on the client apparently resets skill stuns.
 		/// </remarks>
 		/// <param name="locks">Locks to deactivate.</param>
 		/// <param name="updateClient">Sends CharacterUnlock to client if true.</param>
@@ -2043,7 +2096,7 @@ namespace Aura.Channel.World.Entities
 			var prev = this.Locks;
 			this.Locks &= ~locks;
 
-			if (updateClient && prev != this.Locks)
+			if (updateClient /*&& prev != this.Locks*/)
 				Send.CharacterUnlock(this, locks);
 
 			return this.Locks;
@@ -2057,6 +2110,47 @@ namespace Aura.Channel.World.Entities
 		public bool Can(Locks locks)
 		{
 			return ((this.Locks & locks) == 0);
+		}
+
+		/// <summary>
+		/// Sends a msg box to creature's client, asking a question.
+		/// The callback is executed if the box is answered with OK.
+		/// </summary>
+		/// <param name="callback"></param>
+		/// <param name="format"></param>
+		/// <param name="args"></param>
+		public void Inquiry(Action<Creature> callback, string format, params object[] args)
+		{
+			byte id;
+
+			lock (_inquiryCallbacks)
+			{
+				_inquiryId++;
+				if (_inquiryId == 0)
+					_inquiryId = 1;
+
+				id = _inquiryId;
+
+				_inquiryCallbacks[id] = callback;
+			}
+
+			Send.Inquiry(this, id, format, args);
+		}
+
+		/// <summary>
+		/// Calls inquiry callback for id if there is one.
+		/// </summary>
+		/// <param name="id"></param>
+		public void HandleInquiry(byte id)
+		{
+			Action<Creature> action;
+			lock (_inquiryCallbacks)
+			{
+				if (!_inquiryCallbacks.TryGetValue(id, out action) || action == null)
+					return;
+			}
+
+			action(this);
 		}
 	}
 }

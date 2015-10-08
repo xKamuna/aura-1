@@ -48,7 +48,7 @@ namespace Aura.Channel.Skills
 		/// <summary>
 		/// 1 or 2 (normal vs dual wield)
 		/// </summary>
-		public byte MaxHits { get; set; }
+		public CombatActionPackType Type { get; set; }
 
 		/// <summary>
 		/// Attacking creature.
@@ -61,18 +61,35 @@ namespace Aura.Channel.Skills
 		public SkillId SkillId { get; set; }
 
 		/// <summary>
+		/// Unknown Flags, magic shield related?
+		/// </summary>
+		public byte Flags { get; set; }
+
+		public int BlockedByShieldPosX { get; set; }
+		public int BlockedByShieldPosY { get; set; }
+		public long ShieldCasterId { get; set; }
+
+		/// <summary>
 		/// Attacker and Target actions.
 		/// </summary>
 		public List<CombatAction> Actions { get; protected set; }
 
+		/// <summary>
+		/// Initializes combat action pack.
+		/// </summary>
 		private CombatActionPack()
 		{
 			this.Id = Interlocked.Increment(ref _actionId);
 			this.Hit = 1;
-			this.MaxHits = 1;
+			this.Type = CombatActionPackType.NormalAttack;
 			this.Actions = new List<CombatAction>();
 		}
 
+		/// <summary>
+		/// Creates new combat action pack.
+		/// </summary>
+		/// <param name="attacker"></param>
+		/// <param name="skillId"></param>
 		public CombatActionPack(Creature attacker, SkillId skillId)
 			: this()
 		{
@@ -80,6 +97,12 @@ namespace Aura.Channel.Skills
 			this.SkillId = skillId;
 		}
 
+		/// <summary>
+		/// Creates new combat action pack.
+		/// </summary>
+		/// <param name="attacker"></param>
+		/// <param name="skillId"></param>
+		/// <param name="actions"></param>
 		public CombatActionPack(Creature attacker, SkillId skillId, params CombatAction[] actions)
 			: this(attacker, skillId)
 		{
@@ -134,7 +157,7 @@ namespace Aura.Channel.Skills
 						tAction.Set(TargetOptions.ManaShield);
 
 					// On attack events
-					ChannelServer.Instance.Events.OnCreatureAttack(tAction);
+					ChannelServer.Instance.Events.OnCreatureAttacked(tAction);
 					if (this.Attacker.IsPlayer)
 						ChannelServer.Instance.Events.OnCreatureAttackedByPlayer(tAction);
 
@@ -147,7 +170,11 @@ namespace Aura.Channel.Skills
 					}
 
 					// Cancel target's skill
-					if (action.Creature.Skills.ActiveSkill != null)
+					// Don't cancel Defense, which is still active at this point,
+					// a Complete for it is sent by the client shortly after.
+					// That won't happen if Smash is the attacker skill,
+					// but that's official behavior.
+					if (action.Creature.Skills.ActiveSkill != null && action.Creature.Skills.ActiveSkill.Info.Id != SkillId.Defense)
 					{
 						// Cancel non stackable skills on hit, wait for a
 						// knock back for stackables
@@ -212,6 +239,15 @@ namespace Aura.Channel.Skills
 		}
 	}
 
+	/// <summary>
+	/// Combat action base class.
+	/// </summary>
+	/// <remarks>
+	/// TODO: Officially there's no differentiation between attacker and target
+	///   actions, it all depends on the flags and options. Now that we have
+	///   the proper enums, we might want to change this as well.
+	///   This will require some changes to the way we handle skill training.
+	/// </remarks>
 	public abstract class CombatAction
 	{
 		/// <summary>
@@ -220,7 +256,7 @@ namespace Aura.Channel.Skills
 		public Creature Creature { get; set; }
 
 		// Type of combat action
-		public CombatActionType Type { get; set; }
+		public CombatActionType Flags { get; set; }
 
 		/// <summary>
 		/// Time before creature can move again.
@@ -233,12 +269,27 @@ namespace Aura.Channel.Skills
 		public SkillId SkillId { get; set; }
 
 		/// <summary>
+		/// Used for alchemy crystals.
+		/// </summary>
+		public SkillId SecondarySkillId { get; set; }
+
+		/// <summary>
+		/// Don't know, seems to be always 0. Attacking with offhand weapon?
+		/// </summary>
+		public byte UsedWeaponSet { get; set; }
+
+		/// <summary>
+		/// Usually 1. 2 seen in dualwield, right or left weapon?
+		/// </summary>
+		public byte WeaponParameterType { get; set; }
+
+		/// <summary>
 		/// Returns true if action is a knock back/down.
 		/// </summary>
 		public abstract bool IsKnockBack { get; }
 
 		/// <summary>
-		/// Attack or Target action
+		/// Attack or Target action.
 		/// </summary>
 		public abstract CombatActionCategory Category { get; }
 
@@ -249,13 +300,13 @@ namespace Aura.Channel.Skills
 		public CombatActionPack Pack { get; set; }
 
 		/// <summary>
-		/// Returns true if the given type equals the combat action's type.
+		/// Returns true if the specified flags are set.
 		/// </summary>
-		/// <param name="type"></param>
+		/// <param name="flags"></param>
 		/// <returns></returns>
-		public bool Is(CombatActionType type)
+		public bool Is(CombatActionType flags)
 		{
-			return (this.Type == type);
+			return flags == this.Flags || (flags != CombatActionType.None && (this.Flags & flags) != 0);
 		}
 	}
 
@@ -269,6 +320,11 @@ namespace Aura.Channel.Skills
 		/// Attacker options
 		/// </summary>
 		public AttackerOptions Options { get; set; }
+
+		/// <summary>
+		/// Attack Phase. Used in Pummel.
+		/// </summary>
+		public byte Phase { get; set; }
 
 		/// <summary>
 		/// Id of the attacked creature/area
@@ -288,14 +344,25 @@ namespace Aura.Channel.Skills
 			get { return this.Has(AttackerOptions.KnockBackHit2) || this.Has(AttackerOptions.KnockBackHit1); }
 		}
 
+		/// <summary>
+		/// Attack or Target action.
+		/// </summary>
 		public override CombatActionCategory Category { get { return CombatActionCategory.Attack; } }
 
+		/// <summary>
+		/// Creates new attacker action.
+		/// </summary>
+		/// <param name="type"></param>
+		/// <param name="creature"></param>
+		/// <param name="skillId"></param>
+		/// <param name="targetId"></param>
 		public AttackerAction(CombatActionType type, Creature creature, SkillId skillId, long targetId)
 		{
-			this.Type = type;
+			this.Flags = type;
 			this.Creature = creature;
 			this.SkillId = skillId;
 			this.TargetId = targetId;
+			this.WeaponParameterType = 1;
 		}
 
 		/// <summary>
@@ -345,9 +412,19 @@ namespace Aura.Channel.Skills
 		public float Damage { get; set; }
 
 		/// <summary>
+		/// Wounds inflicted in this combat action.
+		/// </summary>
+		public float Wound { get; set; }
+
+		/// <summary>
 		/// Mana damage (Mana Shield, blue)
 		/// </summary>
 		public float ManaDamage { get; set; }
+
+		/// <summary>
+		/// Action's effect flags.
+		/// </summary>
+		public byte EffectFlags { get; set; }
 
 		/// <summary>
 		/// Skill used by the attacker
@@ -364,14 +441,24 @@ namespace Aura.Channel.Skills
 		/// </summary>
 		public override bool IsKnockBack
 		{
-			get { return this.Has(TargetOptions.KnockDownFinish) || this.Has(TargetOptions.Smash) || this.Has(TargetOptions.KnockBack) || this.Has(TargetOptions.KnockDown) || this.Has(TargetOptions.Finished); }
+			get { return this.Has(TargetOptions.Downed); }
 		}
 
+		/// <summary>
+		/// Attack or Target action.
+		/// </summary>
 		public override CombatActionCategory Category { get { return CombatActionCategory.Target; } }
 
+		/// <summary>
+		/// Creates new target action.
+		/// </summary>
+		/// <param name="type"></param>
+		/// <param name="creature"></param>
+		/// <param name="attacker"></param>
+		/// <param name="skillId"></param>
 		public TargetAction(CombatActionType type, Creature creature, Creature attacker, SkillId skillId)
 		{
-			this.Type = type;
+			this.Flags = type;
 			this.Creature = creature;
 			this.Attacker = attacker;
 			this.SkillId = skillId;

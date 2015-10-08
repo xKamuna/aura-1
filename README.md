@@ -13,7 +13,8 @@ As such, every user is free to use Aura and choose how to use it.
 Compatibility
 ------------------------------
 Compatibility to all major versions but NA was dropped on
-[2013-09-13 (Aura Legacy)](https://github.com/aura-project/aura_legacy/commit/c6483faace4d79b8f772bee519531718084a243d). Since that time, Aura is kept compatible only to the *latest update* of NA.
+2013-09-13 (in Aura Legacy). Since that time, Aura is kept
+compatible only to the *latest update* of NA.
 
 Requirements
 ------------------------------
@@ -36,7 +37,7 @@ Installation
 
 Afterwards, you should be able to start Aura via the provided scripts or
 directly from the bin directories. If not, or if you need a more detailed guide,
-head over to our [forums](http://aura-project.org/forum/), [Gitter chat](https://gitter.im/aura-project/aura), or [wiki](http://aura-project.org/wiki).
+head over to our [forums](http://aura-project.org/forum/), [Gitter chat](https://gitter.im/aura-project/aura), or [wiki](https://gitter.im/aura-project/aura/wiki).
 
 Contribution
 ------------------------------
@@ -49,13 +50,11 @@ There are 4 ways **you** can help us to improve Aura:
 
 ### 1. Research
 Do research on NPCs, quests, skills, anything really that isn't implemented yet and
-post it on our [research forum](http://aura-project.org/forum/index.php/forum/33-research/).
+post it on our [research forum](http://aura-project.org/forum/forum/36-research/).
 The information you post will help developers to implement the features. 
 
 ### 2. Bug reports
-Report bugs on [GitHub](https://github.com/aura-project/aura/issues) so they can be fixed ASAP.
-If you're not sure if you've found a bug or not, report it on the [forum](http://aura-project.org/forum/index.php/forum/39-bugs/),
-and we'll clarify for you.
+Report bugs on [GitHub](https://github.com/aura-project/aura/issues), so they can be fixed ASAP.
 
 
 ### 3+4. Code
@@ -80,7 +79,7 @@ Common problems
 ------------------------------
 
 ### Errors after updates
-Usually all errors are solveable by recompiling, running SQL updates from `sql/`, and deleting the cache folder.
+Usually all errors are solveable by recompiling and deleting the cache folder.
 
 ### Korean message when trying to connect to channel
 This message means that the client wasn't able to connect to the channel,
@@ -95,6 +94,6 @@ Links
 ------------------------------
 * Forums: http://aura-project.org/
 * GitHub: https://github.com/aura-project
-* [![Gitter chat](https://badges.gitter.im/aura-project/aura.png)](https://gitter.im/aura-project/aura)
-* Trello: https://trello.com/b/qnLaezQf/aura
-* Wiki: http://aura-project.org/wiki
+* Gitter chat: https://gitter.im/aura-project/aura
+* Backlog: [https://github.com/aura-project/aura/issues](https://github.com/aura-project/aura/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Abacklog)
+* Wiki: https://github.com/aura-project/aura/wiki

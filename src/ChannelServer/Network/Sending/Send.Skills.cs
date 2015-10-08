@@ -257,6 +257,19 @@ namespace Aura.Channel.Network.Sending
 		/// </summary>
 		/// <param name="creature"></param>
 		/// <param name="skillId"></param>
+		public static void SkillUse(Creature creature, SkillId skillId)
+		{
+			var packet = new Packet(Op.SkillUse, creature.EntityId);
+			packet.PutUShort((ushort)skillId);
+
+			creature.Client.Send(packet);
+		}
+
+		/// <summary>
+		/// Sends SkillUse to creature's client.
+		/// </summary>
+		/// <param name="creature"></param>
+		/// <param name="skillId"></param>
 		/// <param name="unkByte"></param>
 		public static void SkillUse(Creature creature, SkillId skillId, byte unkByte)
 		{
@@ -739,8 +752,8 @@ namespace Aura.Channel.Network.Sending
 		/// <param name="creature"></param>
 		/// <param name="targetEntityId">Set 0 for negative response.</param>
 		/// <param name="skillId"></param>
-		/// <param name="unkByte"></param>
-		public static void CombatSetAimR(Creature creature, long targetEntityId, SkillId skillId, byte unkByte)
+		/// <param name="flag"></param>
+		public static void CombatSetAimR(Creature creature, long targetEntityId, SkillId skillId, byte flag)
 		{
 			var packet = new Packet(Op.CombatSetAimR, creature.EntityId);
 			packet.PutByte(targetEntityId != 0);
@@ -748,7 +761,7 @@ namespace Aura.Channel.Network.Sending
 			{
 				packet.PutLong(targetEntityId);
 				packet.PutShort((short)skillId);
-				packet.PutByte(unkByte);
+				packet.PutByte(flag);
 			}
 
 			creature.Client.Send(packet);

@@ -20,6 +20,7 @@ using System.Web.UI.WebControls;
 using System.Xml.Linq;
 using Aura.Channel.World.Dungeons.Props;
 using Aura.Channel.World.Dungeons.Puzzles;
+using Aura.Channel.World.Entities.Props;
 
 namespace Aura.Channel.World.Dungeons
 {
@@ -112,6 +113,14 @@ namespace Aura.Channel.World.Dungeons
 		public List<Creature> Party { get; private set; }
 
 		/// <summary>
+		/// The leader of the party that created this dungeon.
+		/// </summary>
+		/// <remarks>
+		/// Temp until we have an actual Party class.
+		/// </remarks>
+		public Creature PartyLeader { get; private set; }
+
+		/// <summary>
 		/// Creates new dungeon.
 		/// </summary>
 		/// <param name="instanceId"></param>
@@ -142,6 +151,13 @@ namespace Aura.Channel.World.Dungeons
 
 			this.Party = new List<Creature>(); // = creature.Party; || = party;
 			this.Party.Add(creature);
+			this.PartyLeader = creature;
+
+			if (creature.IsInParty)
+			{
+				// Only creatures who actually ENTER the dungeon at creation are considered "dungeon founders".
+				this.Party.AddRange(creature.Party.OnAltar());
+			}
 
 			// Get script
 			this.Script = ChannelServer.Instance.ScriptManager.DungeonScripts.Get(this.Name);
@@ -413,7 +429,7 @@ namespace Aura.Channel.World.Dungeons
 				exitStatue.Info.Color1 = floorData.Color1;
 				exitStatue.Info.Color2 = floorData.Color1;
 				exitStatue.Info.Color3 = floorData.Color3;
-				exitStatue.Extensions.Add(new ConfirmationPropExtension("GotoLobby", "_LT[code.standard.msg.dungeon_exit_notice_msg]", "_LT[code.standard.msg.dungeon_exit_notice_title]", "haskey(chest)"));
+				exitStatue.Extensions.AddSilent(new ConfirmationPropExtension("GotoLobby", "_LT[code.standard.msg.dungeon_exit_notice_msg]", "_LT[code.standard.msg.dungeon_exit_notice_title]", "haskey(chest)"));
 				exitStatue.Behavior = (cr, pr) => { cr.Warp(this.Data.Exit); };
 				region.AddProp(exitStatue);
 			}
@@ -633,7 +649,7 @@ namespace Aura.Channel.World.Dungeons
 
 			// Call OnBossDeath
 			if (this.Script != null)
-				this.Script.OnBossDeath(this, creature);
+				this.Script.OnBossDeath(this, creature, killer);
 
 			// Complete dungeon when all bosses were killed
 			if (_bossesRemaining == 0)
@@ -695,6 +711,16 @@ namespace Aura.Channel.World.Dungeons
 		public int CountPlayers()
 		{
 			return this.Regions.Sum(a => a.CountPlayers());
+		}
+
+		/// <summary>
+		/// Plays cutscene for all party members.
+		/// </summary>
+		/// <param name="dungeon"></param>
+		/// <param name="cutsceneName"></param>
+		public void PlayCutscene(string cutsceneName)
+		{
+			Cutscene.Play(cutsceneName, this.PartyLeader);
 		}
 	}
 }
