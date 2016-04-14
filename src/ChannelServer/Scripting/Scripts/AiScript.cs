@@ -24,8 +24,6 @@ using System.Threading;
 
 namespace Aura.Channel.Scripting.Scripts
 {
-	// TODO: Rewrite into the new tree design before we make more
-	//   of a mess out of this than necessary.
 	public abstract class AiScript : IScript, IDisposable
 	{
 		// Official heartbeat while following a target seems
@@ -85,10 +83,13 @@ namespace Aura.Channel.Scripting.Scripts
 		public bool Active { get { return _active; } }
 
 		/// <summary>
-		/// Returns state of the AI
+		/// Returns state of the AI.
 		/// </summary>
 		public AiState State { get { return _state; } }
 
+		/// <summary>
+		/// Initializes AI.
+		/// </summary>
 		protected AiScript()
 		{
 			this.Phrases = new List<string>();
@@ -153,7 +154,7 @@ namespace Aura.Channel.Scripting.Scripts
 		}
 
 		/// <summary>
-		/// Starts AI
+		/// Starts AI.
 		/// </summary>
 		public void Activate(double minRunTime)
 		{
@@ -166,7 +167,7 @@ namespace Aura.Channel.Scripting.Scripts
 		}
 
 		/// <summary>
-		/// Pauses AI
+		/// Pauses AI.
 		/// </summary>
 		public void Deactivate()
 		{
@@ -205,7 +206,7 @@ namespace Aura.Channel.Scripting.Scripts
 		}
 
 		/// <summary>
-		/// Main "loop"
+		/// Main "loop".
 		/// </summary>
 		/// <param name="state"></param>
 		private void Heartbeat(object state)
@@ -519,7 +520,7 @@ namespace Aura.Channel.Scripting.Scripts
 		}
 
 		/// <summary>
-		/// Milliseconds before creature notices.
+		/// Sets milliseconds before creature notices.
 		/// </summary>
 		/// <param name="time"></param>
 		protected void SetAlertDelay(int time)
@@ -528,7 +529,7 @@ namespace Aura.Channel.Scripting.Scripts
 		}
 
 		/// <summary>
-		/// Milliseconds before creature attacks.
+		/// Sets milliseconds before creature attacks.
 		/// </summary>
 		/// <param name="time"></param>
 		protected void SetAggroDelay(int time)
@@ -537,7 +538,7 @@ namespace Aura.Channel.Scripting.Scripts
 		}
 
 		/// <summary>
-		/// Radius in which creature become potential targets.
+		/// Sets radius in which creatures become potential targets.
 		/// </summary>
 		/// <param name="radius"></param>
 		protected void SetAggroRadius(int radius)
@@ -656,7 +657,7 @@ namespace Aura.Channel.Scripting.Scripts
 		}
 
 		/// <summary>
-		/// Reigsters a reaction.
+		/// Registers a reaction.
 		/// </summary>
 		/// <param name="ev">The event on which func should be executed.</param>
 		/// <param name="func">The reaction to the event.</param>
@@ -666,7 +667,7 @@ namespace Aura.Channel.Scripting.Scripts
 		}
 
 		/// <summary>
-		/// Reigsters a reaction.
+		/// Registers a reaction.
 		/// </summary>
 		/// <param name="state">The state the event is for.</param>
 		/// <param name="ev">The event on which func should be executed.</param>
@@ -702,8 +703,7 @@ namespace Aura.Channel.Scripting.Scripts
 		/// <returns></returns>
 		protected int Random(int max)
 		{
-			lock (_rnd)
-				return _rnd.Next(max);
+			return this.Random(0, max);
 		}
 
 		/// <summary>
@@ -890,7 +890,7 @@ namespace Aura.Channel.Scripting.Scripts
 		}
 
 		/// <summary>
-		/// Generates and saves a random number between 0 and 99,
+		/// Generates and saves a random number between 0 and 99
 		/// for Case to use.
 		/// </summary>
 		/// <remarks>
@@ -994,15 +994,15 @@ namespace Aura.Channel.Scripting.Scripts
 		}
 
 		/// <summary>
-		/// Sets target and puts creature in battle mode.
+		/// Sets target and puts creature into battle mode.
 		/// </summary>
-		/// <param name="creature"></param>
-		public void AggroCreature(Creature creature)
+		/// <param name="target"></param>
+		public void AggroCreature(Creature target)
 		{
 			_state = AiState.Aggro;
 			this.Clear();
 			this.Creature.IsInBattleStance = true;
-			this.Creature.Target = creature;
+			this.Creature.Target = target;
 			Send.SetCombatTarget(this.Creature, this.Creature.Target.EntityId, TargetMode.Aggro);
 		}
 
@@ -1025,7 +1025,7 @@ namespace Aura.Channel.Scripting.Scripts
 		/// <summary>
 		/// Makes creature say one of the messages in public chat.
 		/// </summary>
-		/// <param name="msg"></param>
+		/// <param name="msgs"></param>
 		/// <returns></returns>
 		protected IEnumerable Say(params string[] msgs)
 		{
@@ -1075,6 +1075,7 @@ namespace Aura.Channel.Scripting.Scripts
 		/// </summary>
 		/// <param name="minDistance"></param>
 		/// <param name="maxDistance"></param>
+		/// <param name="walk"></param>
 		/// <returns></returns>
 		protected IEnumerable Wander(int minDistance = 100, int maxDistance = 600, bool walk = true)
 		{
@@ -1174,6 +1175,7 @@ namespace Aura.Channel.Scripting.Scripts
 		/// <param name="radius"></param>
 		/// <param name="timeMin"></param>
 		/// <param name="timeMax"></param>
+		/// <param name="walk"></param>
 		/// <returns></returns>
 		protected IEnumerable Circle(int radius, int timeMin = 1000, int timeMax = 5000, bool walk = true)
 		{
@@ -1187,6 +1189,7 @@ namespace Aura.Channel.Scripting.Scripts
 		/// <param name="timeMin"></param>
 		/// <param name="timeMax"></param>
 		/// <param name="clockwise"></param>
+		/// <param name="walk"></param>
 		/// <returns></returns>
 		protected IEnumerable Circle(int radius, int timeMin, int timeMax, bool clockwise, bool walk)
 		{
@@ -1289,6 +1292,8 @@ namespace Aura.Channel.Scripting.Scripts
 		/// <summary>
 		/// Attacks target creature x times.
 		/// </summary>
+		/// <param name="count"></param>
+		/// <param name="timeout"></param>
 		/// <returns></returns>
 		protected IEnumerable Attack(int count, int timeout = 300000)
 		{
@@ -1684,7 +1689,7 @@ namespace Aura.Channel.Scripting.Scripts
 		}
 
 		/// <summary>
-		/// Makes creature cancel currently loaded skill.
+		/// Makes creature complete the currently loaded skill.
 		/// </summary>
 		/// <returns></returns>
 		protected IEnumerable CompleteSkill()
@@ -1871,7 +1876,7 @@ namespace Aura.Channel.Scripting.Scripts
 		}
 
 		/// <summary>
-		/// Adds stat mod to the AI's creature.
+		/// Sets base stat to given value.
 		/// </summary>
 		/// <param name="stat"></param>
 		/// <param name="value"></param>
