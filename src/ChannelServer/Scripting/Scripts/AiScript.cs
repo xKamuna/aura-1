@@ -78,11 +78,6 @@ namespace Aura.Channel.Scripting.Scripts
 		public List<string> Phrases { get; protected set; }
 
 		/// <summary>
-		/// Returns whether the AI is currently active.
-		/// </summary>
-		public bool Active { get { return _active; } }
-
-		/// <summary>
 		/// Returns state of the AI.
 		/// </summary>
 		public AiState State { get { return _state; } }
@@ -560,16 +555,6 @@ namespace Aura.Channel.Scripting.Scripts
 		}
 
 		/// <summary>
-		/// The way the AI decides whether to go into Alert/Aggro.
-		/// </summary>
-		/// <param name="type"></param>
-		protected void SetAggroType(AggroType type)
-		{
-			//_aggroType = type;
-			Log.Warning("{0}: SetAggroType is obsolete, use 'Doubts' and 'HatesBattleStance' instead.", this.GetType().Name);
-		}
-
-		/// <summary>
 		/// Milliseconds before creature attacks.
 		/// </summary>
 		/// <param name="limit"></param>
@@ -756,18 +741,6 @@ namespace Aura.Channel.Scripting.Scripts
 		protected bool DoesDoubt(Creature target)
 		{
 			return _doubtTags.Values.Any(tag => target.RaceData.HasTag(tag));
-		}
-
-		/// <summary>
-		/// Returns true if there are collisions between the two positions.
-		/// </summary>
-		/// <param name="pos1"></param>
-		/// <param name="pos2"></param>
-		/// <returns></returns>
-		protected bool AnyCollisions(Position pos1, Position pos2)
-		{
-			Position intersection;
-			return this.Creature.Region.Collisions.Find(pos1, pos2, out intersection);
 		}
 
 		/// <summary>
