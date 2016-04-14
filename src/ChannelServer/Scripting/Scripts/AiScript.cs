@@ -238,16 +238,6 @@ namespace Aura.Channel.Scripting.Scripts
 
 				this.SelectState();
 
-				// Stop and clear if stunned
-				if (this.Creature.IsStunned)
-				{
-					// Clearing causes it to run aggro from beginning again
-					// and again, this should probably be moved to the take
-					// damage "event"?
-					//this.Clear();
-					return;
-				}
-
 				// Select and run state
 				var prevAction = _curAction;
 				if (_curAction == null || !_curAction.MoveNext())
@@ -1031,6 +1021,10 @@ namespace Aura.Channel.Scripting.Scripts
 		/// <returns></returns>
 		protected IEnumerable Wait(int min, int max = 0)
 		{
+			// Wait until creature isn't stunned anymore
+			if (this.Creature.IsStunned)
+				yield return true;
+
 			if (max < min)
 				max = min;
 
@@ -1052,6 +1046,10 @@ namespace Aura.Channel.Scripting.Scripts
 		/// <returns></returns>
 		protected IEnumerable Wander(int minDistance = 100, int maxDistance = 600, bool walk = true)
 		{
+			// Wait until creature isn't stunned anymore
+			if (this.Creature.IsStunned)
+				yield return true;
+
 			if (maxDistance < minDistance)
 				maxDistance = minDistance;
 
@@ -1076,6 +1074,10 @@ namespace Aura.Channel.Scripting.Scripts
 		/// <returns></returns>
 		protected IEnumerable Timeout(double timeout, IEnumerable action)
 		{
+			// Wait until creature isn't stunned anymore
+			if (this.Creature.IsStunned)
+				yield return true;
+
 			timeout += _timestamp;
 
 			foreach (var a in action)
@@ -1114,6 +1116,10 @@ namespace Aura.Channel.Scripting.Scripts
 		/// <returns></returns>
 		protected IEnumerable MoveTo(Position destination, bool walk)
 		{
+			// Wait until creature isn't stunned anymore
+			if (this.Creature.IsStunned)
+				yield return true;
+
 			var pos = this.Creature.GetPosition();
 
 			// Check for collision
@@ -1166,6 +1172,10 @@ namespace Aura.Channel.Scripting.Scripts
 		/// <returns></returns>
 		protected IEnumerable Circle(int radius, int timeMin, int timeMax, bool clockwise, bool walk)
 		{
+			// Wait until creature isn't stunned anymore
+			if (this.Creature.IsStunned)
+				yield return true;
+
 			if (timeMin < 500)
 				timeMin = 500;
 			if (timeMax < timeMin)
@@ -1203,6 +1213,10 @@ namespace Aura.Channel.Scripting.Scripts
 		/// <returns></returns>
 		protected IEnumerable Follow(int maxDistance, bool walk = false, int timeout = 5000)
 		{
+			// Wait until creature isn't stunned anymore
+			if (this.Creature.IsStunned)
+				yield return true;
+
 			var until = _timestamp + Math.Max(0, timeout);
 
 			while (_timestamp < until)
@@ -1233,6 +1247,10 @@ namespace Aura.Channel.Scripting.Scripts
 		/// <returns></returns>
 		protected IEnumerable KeepDistance(int minDistance, bool walk = false, int timeout = 5000)
 		{
+			// Wait until creature isn't stunned anymore
+			if (this.Creature.IsStunned)
+				yield return true;
+
 			var until = _timestamp + Math.Max(0, timeout);
 
 			while (_timestamp < until)
@@ -1275,6 +1293,10 @@ namespace Aura.Channel.Scripting.Scripts
 				this.Reset();
 				yield break;
 			}
+
+			// Wait until creature isn't stunned anymore
+			if (this.Creature.IsStunned)
+				yield return true;
 
 			timeout = Math2.Clamp(0, 300000, timeout);
 			var until = _timestamp + timeout;
@@ -1345,6 +1367,10 @@ namespace Aura.Channel.Scripting.Scripts
 		/// <returns></returns>
 		protected IEnumerable RangedAttack(int timeout = 5000)
 		{
+			// Wait until creature isn't stunned anymore
+			if (this.Creature.IsStunned)
+				yield return true;
+
 			var target = this.Creature.Target;
 
 			// Check active skill
@@ -1430,6 +1456,10 @@ namespace Aura.Channel.Scripting.Scripts
 		/// <returns></returns>
 		protected IEnumerable StackAttack(SkillId skillId, int stacks = 1, int timeout = 30000)
 		{
+			// Wait until creature isn't stunned anymore
+			if (this.Creature.IsStunned)
+				yield return true;
+
 			var target = this.Creature.Target;
 			var until = _timestamp + Math.Max(0, timeout);
 
@@ -1528,6 +1558,10 @@ namespace Aura.Channel.Scripting.Scripts
 		/// <returns></returns>
 		protected IEnumerable PrepareSkill(SkillId skillId, int stacks)
 		{
+			// Wait until creature isn't stunned anymore
+			if (this.Creature.IsStunned)
+				yield return true;
+
 			// Get skill
 			var skill = this.Creature.Skills.Get(skillId);
 			if (skill == null)
@@ -1623,6 +1657,10 @@ namespace Aura.Channel.Scripting.Scripts
 		/// <returns></returns>
 		protected IEnumerable CancelSkill()
 		{
+			// Wait until creature isn't stunned anymore
+			if (this.Creature.IsStunned)
+				yield return true;
+
 			if (this.Creature.Skills.ActiveSkill != null)
 			{
 				this.SharpMind(this.Creature.Skills.ActiveSkill.Info.Id, SharpMindStatus.Cancelling);
@@ -1639,9 +1677,12 @@ namespace Aura.Channel.Scripting.Scripts
 		protected IEnumerable UseSkill()
 		{
 			var activeSkillId = this.Creature.Skills.ActiveSkill != null ? this.Creature.Skills.ActiveSkill.Info.Id : SkillId.None;
-
 			if (activeSkillId == SkillId.None)
 				yield break;
+
+			// Wait until creature isn't stunned anymore
+			if (this.Creature.IsStunned)
+				yield return true;
 
 			if (activeSkillId == SkillId.Windmill)
 			{
@@ -1680,6 +1721,10 @@ namespace Aura.Channel.Scripting.Scripts
 				Log.Unimplemented("AI.CompleteSkill: Missing handler or ICompletable for '{0}'.", skillId);
 				yield break;
 			}
+
+			// Wait until creature isn't stunned anymore
+			if (this.Creature.IsStunned)
+				yield return true;
 
 			// Run complete
 			try
@@ -1731,6 +1776,10 @@ namespace Aura.Channel.Scripting.Scripts
 				yield break;
 			}
 
+			// Wait until creature isn't stunned anymore
+			if (this.Creature.IsStunned)
+				yield return true;
+
 			// Run handler
 			try
 			{
@@ -1777,6 +1826,10 @@ namespace Aura.Channel.Scripting.Scripts
 				yield break;
 			}
 
+			// Wait until creature isn't stunned anymore
+			if (this.Creature.IsStunned)
+				yield return true;
+
 			// Run handler
 			try
 			{
@@ -1809,6 +1862,10 @@ namespace Aura.Channel.Scripting.Scripts
 		{
 			if (this.Creature.Inventory.WeaponSet == set)
 				yield break;
+
+			// Wait until creature isn't stunned anymore
+			if (this.Creature.IsStunned)
+				yield return true;
 
 			// Wait a moment before and after switching,
 			// to let the animation play.
