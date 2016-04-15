@@ -2,6 +2,7 @@
 // For more information, see license file in the main folder
 
 using Aura.Channel.Scripting.Scripts;
+using Aura.Channel.Scripting.Scripts.AI;
 using Aura.Channel.World.Entities;
 using Aura.Shared.Util;
 using System;

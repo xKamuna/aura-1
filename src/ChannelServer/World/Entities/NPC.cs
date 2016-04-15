@@ -11,6 +11,7 @@ using System;
 using Aura.Channel.Network.Sending;
 using Aura.Data.Database;
 using Aura.Data;
+using Aura.Channel.Scripting.Scripts.AI;
 
 namespace Aura.Channel.World.Entities
 {
@@ -533,7 +534,7 @@ namespace Aura.Channel.World.Entities
 			// Aggro attacker if there is not current target,
 			// or if there is a target but it's not a player, and the attacker is one,
 			// or if the current target is not aggroed yet.
-			if (this.Target == null || (this.Target != null && target != null && !this.Target.IsPlayer && target.IsPlayer) || this.AI.State != AiScript.AiState.Aggro)
+			if (this.Target == null || (this.Target != null && target != null && !this.Target.IsPlayer && target.IsPlayer) || this.AI.State != AiState.Aggro)
 				this.AI.AggroCreature(target);
 		}
 

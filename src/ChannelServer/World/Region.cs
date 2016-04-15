@@ -20,6 +20,7 @@ using Aura.Channel.Scripting.Scripts;
 using Aura.Mabi.Network;
 using Aura.Channel.Scripting;
 using Aura.Channel.World.Entities.Props;
+using Aura.Channel.Scripting.Scripts.AI;
 
 namespace Aura.Channel.World
 {
@@ -1191,7 +1192,7 @@ namespace Aura.Channel.World
 				return _creatures.Values.OfType<NPC>().Count(npc =>
 					!npc.IsDead &&
 					npc.AI != null &&
-					npc.AI.State == AiScript.AiState.Aggro &&
+					npc.AI.State == AiState.Aggro &&
 					npc.RaceId == raceId &&
 					npc.Target == target
 				);
@@ -1216,7 +1217,7 @@ namespace Aura.Channel.World
 				return _creatures.Values.OfType<NPC>().Count(npc =>
 					!npc.IsDead &&
 					npc.AI != null &&
-					npc.AI.State == AiScript.AiState.Aggro &&
+					npc.AI.State == AiState.Aggro &&
 					npc.Target == target
 				);
 			}
