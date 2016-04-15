@@ -122,7 +122,7 @@ namespace Aura.Channel.Scripting.Scripts.AI
 				// the skill was canceled, due to the received hit.
 				// The result is a really confusing situation, where
 				// normal looking attacks suddenly break through Defense.
-				this.Clear();
+				_curAction = null;
 			}
 		}
 

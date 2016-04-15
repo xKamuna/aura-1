@@ -286,7 +286,7 @@ namespace Aura.Channel.Scripting.Scripts.AI
 		/// </summary>
 		private void Reset()
 		{
-			this.Clear();
+			_curAction = null;
 			_state = AiState.Idle;
 
 			if (this.Creature.IsInBattleStance)
@@ -384,8 +384,7 @@ namespace Aura.Channel.Scripting.Scripts.AI
 				// Check if target is still in immediate range
 				if (this.CanPerceive(pos, this.Creature.Direction, this.Creature.Target.GetPosition()))
 				{
-					this.Clear();
-
+					_curAction = null;
 					_state = AiState.Alert;
 					_alertTime = DateTime.Now;
 					this.Creature.IsInBattleStance = true;
@@ -417,8 +416,7 @@ namespace Aura.Channel.Scripting.Scripts.AI
 				var aggroCount = this.Creature.Region.CountAggro(this.Creature.Target, this.Creature.RaceId);
 				if (aggroCount >= (int)_aggroLimit) return;
 
-				this.Clear();
-
+				_curAction = null;
 				_state = AiState.Aggro;
 				Send.SetCombatTarget(this.Creature, this.Creature.Target.EntityId, TargetMode.Aggro);
 			}
@@ -916,14 +914,6 @@ namespace Aura.Channel.Scripting.Scripts.AI
 		// ------------------------------------------------------------------
 
 		/// <summary>
-		/// Cleares action queue.
-		/// </summary>
-		protected void Clear()
-		{
-			_curAction = null;
-		}
-
-		/// <summary>
 		/// Clears AI and sets new current action.
 		/// </summary>
 		/// <param name="action"></param>
@@ -962,8 +952,8 @@ namespace Aura.Channel.Scripting.Scripts.AI
 		/// <param name="target"></param>
 		public void AggroCreature(Creature target)
 		{
+			_curAction = null;
 			_state = AiState.Aggro;
-			this.Clear();
 			this.Creature.IsInBattleStance = true;
 			this.Creature.Target = target;
 			Send.SetCombatTarget(this.Creature, this.Creature.Target.EntityId, TargetMode.Aggro);
