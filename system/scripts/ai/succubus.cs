@@ -14,6 +14,13 @@ public class SuccubusAi : AiScript
 		L("Who's there?"),
 		L("Introduce yourself."),
 		L("Who is it?"),
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] Alert2 = new[]
@@ -22,6 +29,12 @@ public class SuccubusAi : AiScript
 		L("Why have you come to see me?"),
 		L("What brought you here?"),
 		L("How come you are here?"),
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] Alert3 = new[]
@@ -29,6 +42,13 @@ public class SuccubusAi : AiScript
 		L("Do not be afraid."),
 		L("=)"),
 		L("I'll come closer."),
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] Alert4 = new[]
@@ -36,6 +56,13 @@ public class SuccubusAi : AiScript
 		L("We look alike yet different."),
 		L("You're very cute."),
 		L("Your eye color is beautiful."),
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] Alert5 = new[]
@@ -43,6 +70,13 @@ public class SuccubusAi : AiScript
 		L("Quite cute..."),
 		L("=)"),
 		L("Have you come to see me?"),
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] Alert6 = new[]
@@ -50,6 +84,13 @@ public class SuccubusAi : AiScript
 		L("Talk about anything that comes to your mind."),
 		L("Am I that good looking?"),
 		L("What are you thinking about?"),
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] Alert7 = new[]
@@ -57,6 +98,13 @@ public class SuccubusAi : AiScript
 		L("Haha!"),
 		L("Smile!"),
 		L("The sound of your heartbeat is scary."),
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] Alert8 = new[]
@@ -64,12 +112,26 @@ public class SuccubusAi : AiScript
 		L("Please wait..."),
 		L("Do not be afraid."),
 		L("Do not be afraid."),
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] Alert9 = new[]
 	{
 		L("Did not recognize you because it was too dark. (Laughter)"),
 		L("Brigthened up a bit? (Laughter)"),
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] Alert10 = new[]
@@ -78,6 +140,12 @@ public class SuccubusAi : AiScript
 		L("It ran out... (Laughter)"),
 		L("Ah, it's off... (Laughter)"),
 		L("=)"),
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] Alert11 = new[]
@@ -87,6 +155,11 @@ public class SuccubusAi : AiScript
 		L("You are gorgeous."),
 		L("Ah..."),
 		L("I'm starting to have interest in you."),
+		"",
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] Alert12 = new[]
@@ -95,6 +168,12 @@ public class SuccubusAi : AiScript
 		L("I would like to have a closer look."),
 		L("What do you have in your hand?"),
 		L("Are you looking at me?"),
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] Alert13 = new[]
@@ -102,6 +181,13 @@ public class SuccubusAi : AiScript
 		L("You don't seem like an ordinary person."),
 		L("I would like to see you from the side."),
 		L("How come you look different?"),
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] AggroAttack = new[]
@@ -116,6 +202,8 @@ public class SuccubusAi : AiScript
 		L("Will you be still?"),
 		L("Will it work?"),
 		L("Why aren't you fightning back?"),
+		"",
+		"",
 	};
 
 	readonly string[] AfterAttack = new[]
@@ -124,6 +212,12 @@ public class SuccubusAi : AiScript
 		L("This is fun!"),
 		L(":-)"),
 		L("Don't stand up."),
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] Defense = new[]
@@ -133,6 +227,11 @@ public class SuccubusAi : AiScript
 		L("Stand Still."),
 		L("Please, don't."),
 		L("Punch with love"),
+		"",
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] WalkDefense = new[]
@@ -142,12 +241,23 @@ public class SuccubusAi : AiScript
 		L("Are you coming along?"),
 		L("Don't follow me!"),
 		L("I'm starting to have interest in you."),
+		"",
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] AfterDefense = new[]
 	{
 		L("Did you know?"),
 		L("You let me down."),
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] Smash = new[]
@@ -158,6 +268,10 @@ public class SuccubusAi : AiScript
 		L("Get ready! :-)"),
 		L("Ah!"),
 		L("Smash on the go!"),
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] AfterSmash = new[]
@@ -166,12 +280,21 @@ public class SuccubusAi : AiScript
 		L("Still the same?"),
 		L("=)"),
 		L("Not this time?"),
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] FakeSmash = new[]
 	{
 		L("Don't stand up."),
 		L("Oops!"),
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] Counter = new[]
@@ -179,6 +302,12 @@ public class SuccubusAi : AiScript
 		L("Don't follow me!"),
 		L("Here I come!"),
 		L("It's embarrassing..."),
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] AfterCounter = new[]
@@ -188,6 +317,12 @@ public class SuccubusAi : AiScript
 		L("Sudden attack!"),
 		L("Smile!"),
 		L("I'm disappointed"),
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] AggroLB1 = new[]
@@ -200,6 +335,10 @@ public class SuccubusAi : AiScript
 		L("Wait a moment..."),
 		L("Quiet!"),
 		L("You have a phone call!!!"),
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] AggroLB2 = new[]
@@ -207,6 +346,12 @@ public class SuccubusAi : AiScript
 		L("More, more!"),
 		L("Last one!"),
 		L("Still more to go."),
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] AggroFB2 = new[]
@@ -216,6 +361,12 @@ public class SuccubusAi : AiScript
 		L("Do you want more heat?"),
 		L("Firebolt!"),
 		L("Fire"),
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] AggroIB1 = new[]
@@ -224,6 +375,11 @@ public class SuccubusAi : AiScript
 		L("Ice"),
 		L("That was an Icebolt."),
 		L("Cool, isn't it?"),
+		"",
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] OnDefHit = new[]
@@ -234,12 +390,22 @@ public class SuccubusAi : AiScript
 		L("Are you going to hit me?"),
 		L("You're too harsh!"),
 		L("You don't like me?"),
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] AfterDefFlurry = new[]
 	{
 		L("It was so much fun!!"),
 		L("Success?"),
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] OnHitSay = new[]
@@ -248,6 +414,10 @@ public class SuccubusAi : AiScript
 		L("I'm disappointed"),
 		L("Shoot"),
 		L("You want me to leave?"),
+		"",
+		"",
+		"",
+		"",
 	};
 
 	readonly string[] OnKDwn = new[]
@@ -258,6 +428,12 @@ public class SuccubusAi : AiScript
 		L("Ahhhhh!"),
 		L("Gah!"),
 		L("I admire you."),
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
 	};
 
 	public SuccubusAi()
