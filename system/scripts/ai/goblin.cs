@@ -17,7 +17,7 @@ public class GoblinAi : AiScript
 		Hates("/ahchemy_golem/");
 		Hates("/rp/");
 
-		On(AiState.Aggro, AiEvent.DefenseHit, OnDefenseHit);
+		On(AiState.Aggro, AiEventType.DefenseHit, OnDefenseHit);
 	}
 
 	protected override IEnumerable Idle()

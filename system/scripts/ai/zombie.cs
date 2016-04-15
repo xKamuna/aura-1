@@ -32,9 +32,9 @@ public class ZombieAi : AiScript
 		Hates("/pc/", "/pet/");
 		Hates("/ahchemy_golem/");
 
-		On(AiState.Aggro, AiEvent.DefenseHit, OnDefenseHit);
-		On(AiState.Aggro, AiEvent.Hit, OnHit);
-		On(AiState.Aggro, AiEvent.KnockDown, OnKnockDown);
+		On(AiState.Aggro, AiEventType.DefenseHit, OnDefenseHit);
+		On(AiState.Aggro, AiEventType.Hit, OnHit);
+		On(AiState.Aggro, AiEventType.KnockDown, OnKnockDown);
 	}
 
 	protected override IEnumerable Idle()

@@ -11,7 +11,7 @@ using System;
 using Aura.Channel.Network.Sending;
 using Aura.Data.Database;
 using Aura.Data;
-using Aura.Channel.Scripting.Scripts.AI;
+using Aura.Channel.Scripting.Scripts.Ai;
 
 namespace Aura.Channel.World.Entities
 {

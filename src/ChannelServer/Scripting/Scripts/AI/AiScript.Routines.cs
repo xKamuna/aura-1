@@ -22,7 +22,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 
-namespace Aura.Channel.Scripting.Scripts.AI
+namespace Aura.Channel.Scripting.Scripts.Ai
 {
 	public abstract partial class AiScript : IScript, IDisposable
 	{

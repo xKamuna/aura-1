@@ -16,7 +16,7 @@ public class LaghodessaAi : AiScript
 
 		Hates("/pc/", "/pet/");
 
-		On(AiState.Aggro, AiEvent.DefenseHit, OnDefenseHit);
+		On(AiState.Aggro, AiEventType.DefenseHit, OnDefenseHit);
 	}
 
 	protected override IEnumerable Idle()

@@ -16,7 +16,7 @@ public class BoarAi : AiScript
 		Hates("/pc/", "/pet/");
 		SetAggroLimit(AggroLimit.None);
 
-		On(AiState.Aggro, AiEvent.DefenseHit, OnDefenseHit);
+		On(AiState.Aggro, AiEventType.DefenseHit, OnDefenseHit);
 	}
 
 	protected override IEnumerable Idle()

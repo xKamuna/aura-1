@@ -96,10 +96,10 @@ public class KoboldBanditAi : AiScript
 		Doubts("/pc/", "/pet/");
 		HatesNearby(7000);
 
-		On(AiState.Aggro, AiEvent.DefenseHit, OnDefenseHit);
-		On(AiState.Aggro, AiEvent.Hit, OnHit);
-		On(AiState.Aggro, AiEvent.KnockDown, OnKnockDown);
-		On(AiState.Aggro, AiEvent.KnockDown, SkillId.Counterattack, OnCounterKnockDown);
+		On(AiState.Aggro, AiEventType.DefenseHit, OnDefenseHit);
+		On(AiState.Aggro, AiEventType.Hit, OnHit);
+		On(AiState.Aggro, AiEventType.KnockDown, OnKnockDown);
+		On(AiState.Aggro, AiEventType.KnockDown, SkillId.Counterattack, OnCounterKnockDown);
 	}
 
 	protected override IEnumerable Idle()

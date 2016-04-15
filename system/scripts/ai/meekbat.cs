@@ -14,8 +14,8 @@ public class MeekBatAi : AiScript
 
 		Doubts("/pc/", "/pet/");
 
-		On(AiState.Aggro, AiEvent.DefenseHit, OnDefenseHit);
-		On(AiState.Aggro, AiEvent.Hit, OnHit);
+		On(AiState.Aggro, AiEventType.DefenseHit, OnDefenseHit);
+		On(AiState.Aggro, AiEventType.Hit, OnHit);
 	}
 
 	protected override IEnumerable Idle()

@@ -11,7 +11,7 @@ public class MimicAi : AiScript
 	{
 		//Doubts("/pc/");
 		
-		On(AiState.Aggro, AiEvent.DefenseHit, OnDefenseHit);
+		On(AiState.Aggro, AiEventType.DefenseHit, OnDefenseHit);
 	}
 
 	protected override IEnumerable Idle()

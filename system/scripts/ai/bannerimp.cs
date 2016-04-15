@@ -67,9 +67,9 @@ public class BannerImpAi : AiScript
 
 		Doubts("/pc/", "/pet/");
 
-		On(AiState.Aggro, AiEvent.Hit, OnHit);
-		On(AiState.Aggro, AiEvent.KnockDown, OnKnockDown);
-		On(AiState.Aggro, AiEvent.DefenseHit, OnDefenseHit);
+		On(AiState.Aggro, AiEventType.Hit, OnHit);
+		On(AiState.Aggro, AiEventType.KnockDown, OnKnockDown);
+		On(AiState.Aggro, AiEventType.DefenseHit, OnDefenseHit);
 	}
 
 	protected override IEnumerable Idle()

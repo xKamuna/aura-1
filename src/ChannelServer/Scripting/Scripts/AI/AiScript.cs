@@ -22,7 +22,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 
-namespace Aura.Channel.Scripting.Scripts.AI
+namespace Aura.Channel.Scripting.Scripts.Ai
 {
 	public abstract partial class AiScript : IScript, IDisposable
 	{
@@ -48,7 +48,7 @@ namespace Aura.Channel.Scripting.Scripts.AI
 		protected IEnumerator _curAction;
 		protected Creature _newAttackable;
 
-		protected Dictionary<AiState, Dictionary<AiEvent, Dictionary<SkillId, Func<IEnumerable>>>> _reactions;
+		protected Dictionary<AiState, Dictionary<AiEventType, Dictionary<SkillId, Func<IEnumerable>>>> _reactions;
 
 		// Heartbeat cache
 		protected IList<Creature> _playersInRange;
@@ -94,12 +94,12 @@ namespace Aura.Channel.Scripting.Scripts.AI
 			_heartbeatTimer = new Timer(this.Heartbeat, null, -1, -1);
 
 			_rnd = new Random(RandomProvider.Get().Next());
-			_reactions = new Dictionary<AiState, Dictionary<AiEvent, Dictionary<SkillId, Func<IEnumerable>>>>();
-			_reactions[AiState.Idle] = new Dictionary<AiEvent, Dictionary<SkillId, Func<IEnumerable>>>();
-			_reactions[AiState.Aware] = new Dictionary<AiEvent, Dictionary<SkillId, Func<IEnumerable>>>();
-			_reactions[AiState.Alert] = new Dictionary<AiEvent, Dictionary<SkillId, Func<IEnumerable>>>();
-			_reactions[AiState.Aggro] = new Dictionary<AiEvent, Dictionary<SkillId, Func<IEnumerable>>>();
-			_reactions[AiState.Love] = new Dictionary<AiEvent, Dictionary<SkillId, Func<IEnumerable>>>();
+			_reactions = new Dictionary<AiState, Dictionary<AiEventType, Dictionary<SkillId, Func<IEnumerable>>>>();
+			_reactions[AiState.Idle] = new Dictionary<AiEventType, Dictionary<SkillId, Func<IEnumerable>>>();
+			_reactions[AiState.Aware] = new Dictionary<AiEventType, Dictionary<SkillId, Func<IEnumerable>>>();
+			_reactions[AiState.Alert] = new Dictionary<AiEventType, Dictionary<SkillId, Func<IEnumerable>>>();
+			_reactions[AiState.Aggro] = new Dictionary<AiEventType, Dictionary<SkillId, Func<IEnumerable>>>();
+			_reactions[AiState.Love] = new Dictionary<AiEventType, Dictionary<SkillId, Func<IEnumerable>>>();
 
 			_state = AiState.Idle;
 			_aggroRadius = 500;
@@ -634,7 +634,7 @@ namespace Aura.Channel.Scripting.Scripts.AI
 		/// </summary>
 		/// <param name="ev">The event on which func should be executed.</param>
 		/// <param name="func">The reaction to the event.</param>
-		protected void On(AiState state, AiEvent ev, Func<IEnumerable> func)
+		protected void On(AiState state, AiEventType ev, Func<IEnumerable> func)
 		{
 			this.On(state, ev, SkillId.None, func);
 		}
@@ -646,7 +646,7 @@ namespace Aura.Channel.Scripting.Scripts.AI
 		/// <param name="ev">The event on which func should be executed.</param>
 		/// <param name="skillId">The skill the should trigger the event.</param>
 		/// <param name="func">The reaction to the event.</param>
-		protected void On(AiState state, AiEvent ev, SkillId skillId, Func<IEnumerable> func)
+		protected void On(AiState state, AiEventType ev, SkillId skillId, Func<IEnumerable> func)
 		{
 			lock (_reactions)
 			{

@@ -22,7 +22,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 
-namespace Aura.Channel.Scripting.Scripts.AI
+namespace Aura.Channel.Scripting.Scripts.Ai
 {
 	public abstract partial class AiScript : IScript, IDisposable
 	{
@@ -40,8 +40,8 @@ namespace Aura.Channel.Scripting.Scripts.AI
 			lock (_reactions)
 			{
 				var state = _reactions[_state];
-				var ev = AiEvent.None;
-				var fallback = AiEvent.None;
+				var ev = AiEventType.None;
+				var fallback = AiEventType.None;
 
 				// Knock down event
 				if (action.Has(TargetOptions.KnockDown) || action.Has(TargetOptions.Smash))
@@ -50,34 +50,34 @@ namespace Aura.Channel.Scripting.Scripts.AI
 					if (action.AttackerSkillId != SkillId.Windmill)
 					{
 						if (action.Has(TargetOptions.Critical))
-							ev = AiEvent.CriticalKnockDown;
+							ev = AiEventType.CriticalKnockDown;
 						else
-							ev = AiEvent.KnockDown;
+							ev = AiEventType.KnockDown;
 					}
 				}
 				// Defense event
 				else if (action.SkillId == SkillId.Defense)
 				{
-					ev = AiEvent.DefenseHit;
+					ev = AiEventType.DefenseHit;
 				}
 				// Magic hit event
 				// Use skill ids for now, until we know more about what
 				// exactly classifies as a magic hit and what doesn't.
 				else if (action.AttackerSkillId >= SkillId.Lightningbolt && action.AttackerSkillId <= SkillId.Inspiration)
 				{
-					ev = AiEvent.MagicHit;
+					ev = AiEventType.MagicHit;
 					if (action.Has(TargetOptions.Critical))
-						fallback = AiEvent.CriticalHit;
+						fallback = AiEventType.CriticalHit;
 					else
-						fallback = AiEvent.Hit;
+						fallback = AiEventType.Hit;
 				}
 				// Hit event
 				else
 				{
 					if (action.Has(TargetOptions.Critical))
-						ev = AiEvent.CriticalHit;
+						ev = AiEventType.CriticalHit;
 					else
-						ev = AiEvent.Hit;
+						ev = AiEventType.Hit;
 				}
 
 				// Try to find and execute event

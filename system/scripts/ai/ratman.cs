@@ -14,8 +14,8 @@ public class RatManAi : AiScript
 
 		Hates("/pc/", "/pet/");
 
-		On(AiState.Aggro, AiEvent.DefenseHit, OnDefenseHit);
-		On(AiState.Aggro, AiEvent.KnockDown, OnKnockDown);
+		On(AiState.Aggro, AiEventType.DefenseHit, OnDefenseHit);
+		On(AiState.Aggro, AiEventType.KnockDown, OnKnockDown);
 	}
 
 	protected override IEnumerable Idle()

@@ -32,7 +32,7 @@ namespace Aura.Channel.Scripting.Compilers
 			add.Append("using Aura.Channel.Network;");
 			add.Append("using Aura.Channel.Network.Sending;");
 			add.Append("using Aura.Channel.Scripting.Scripts;");
-			add.Append("using Aura.Channel.Scripting.Scripts.AI;");
+			add.Append("using Aura.Channel.Scripting.Scripts.Ai;");
 			add.Append("using Aura.Channel.Scripting;");
 			add.Append("using Aura.Channel.Util;");
 			add.Append("using Aura.Channel.World.Dungeons;");

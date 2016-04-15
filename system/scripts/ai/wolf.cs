@@ -18,7 +18,7 @@ public class WolfAi : AiScript
 		Hates("/dog/");
 		HatesBattleStance(3000);
 
-		On(AiState.Aggro, AiEvent.DefenseHit, OnDefenseHit);
+		On(AiState.Aggro, AiEventType.DefenseHit, OnDefenseHit);
 	}
 
 	protected override IEnumerable Idle()

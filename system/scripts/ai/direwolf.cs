@@ -22,8 +22,8 @@ public class DirewolfAi : AiScript
 		HatesBattleStance(3000);
 		HatesNearby(6000);
 
-		On(AiState.Aggro, AiEvent.DefenseHit, OnDefenseHit);
-		On(AiState.Aggro, AiEvent.Hit, OnHit);
+		On(AiState.Aggro, AiEventType.DefenseHit, OnDefenseHit);
+		On(AiState.Aggro, AiEventType.Hit, OnHit);
 	}
 
 	protected override IEnumerable Idle()

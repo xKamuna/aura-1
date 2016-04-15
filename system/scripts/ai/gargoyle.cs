@@ -14,10 +14,10 @@ public class GargoyleAi : AiScript
 
 		Hates("/pc/", "/pet/");
 
-		On(AiState.Aggro, AiEvent.Hit, OnHit);
-		On(AiState.Aggro, AiEvent.KnockDown, OnKnockDown);
-		On(AiState.Aggro, AiEvent.DefenseHit, OnDefenseHit);
-		On(AiState.Aggro, AiEvent.MagicHit, OnMagicHit);
+		On(AiState.Aggro, AiEventType.Hit, OnHit);
+		On(AiState.Aggro, AiEventType.KnockDown, OnKnockDown);
+		On(AiState.Aggro, AiEventType.DefenseHit, OnDefenseHit);
+		On(AiState.Aggro, AiEventType.MagicHit, OnMagicHit);
 	}
 
 	protected override IEnumerable Idle()

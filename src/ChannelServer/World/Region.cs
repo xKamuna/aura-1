@@ -20,7 +20,7 @@ using Aura.Channel.Scripting.Scripts;
 using Aura.Mabi.Network;
 using Aura.Channel.Scripting;
 using Aura.Channel.World.Entities.Props;
-using Aura.Channel.Scripting.Scripts.AI;
+using Aura.Channel.Scripting.Scripts.Ai;
 
 namespace Aura.Channel.World
 {

@@ -18,7 +18,7 @@ public class KoboldAi : AiScript
 		Hates("/pc/", "/pet/");
 		//HatesAttacking("/koboldarcher/");
 
-		On(AiState.Aggro, AiEvent.DefenseHit, OnDefenseHit);
+		On(AiState.Aggro, AiEventType.DefenseHit, OnDefenseHit);
 	}
 
 	protected override IEnumerable Idle()

@@ -148,7 +148,7 @@
     <Compile Include="Scripting\Scripts\AI\AggroType.cs" />
     <Compile Include="Scripting\Scripts\AI\AiEvent.cs" />
     <Compile Include="Scripting\Scripts\AI\AiScript.Events.cs" />
-    <Compile Include="Scripting\Scripts\AI\AiScript.Actions.cs" />
+    <Compile Include="Scripting\Scripts\AI\AiScript.Routines.cs" />
     <Compile Include="Scripting\Scripts\AI\AiScript.cs" />
     <Compile Include="Scripting\Scripts\AI\AiScriptAttribute.cs" />
     <Compile Include="Scripting\Scripts\AI\AiState.cs" />

@@ -16,7 +16,7 @@ public class SpiderAi : AiScript
 		HatesNearby(3000);
 		HatesBattleStance(1000);
 
-		On(AiState.Aggro, AiEvent.DefenseHit, OnDefenseHit);
+		On(AiState.Aggro, AiEventType.DefenseHit, OnDefenseHit);
 	}
 
 	protected override IEnumerable Idle()

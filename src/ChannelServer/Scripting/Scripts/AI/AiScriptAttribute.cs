@@ -3,7 +3,7 @@
 
 using System;
 
-namespace Aura.Channel.Scripting.Scripts.AI
+namespace Aura.Channel.Scripting.Scripts.Ai
 {
 	/// <summary>
 	/// Attribute for AI scripts, to specify which races the script is for.
