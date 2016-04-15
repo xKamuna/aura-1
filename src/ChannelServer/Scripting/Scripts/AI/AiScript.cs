@@ -261,6 +261,7 @@ namespace Aura.Channel.Scripting.Scripts.Ai
 
 			_inside = true;
 			_stuckTestCount = 0;
+
 			try
 			{
 				var now = this.UpdateTimestamp();
@@ -279,36 +280,11 @@ namespace Aura.Channel.Scripting.Scripts.Ai
 					return;
 
 				// Handle queued events
-				var events = this.GetQueuedEvents();
-				if (events != null && events.Count != 0)
-				{
-					foreach (var ev in events)
-						ev.Handle(this);
-				}
+				this.HandleQueuedEvents();
 
 				// Select and run state
 				this.SelectState();
-
-				var prevAction = _curAction;
-				if (_curAction == null || !_curAction.MoveNext())
-				{
-					// If action is switched on the last iteration we end up
-					// here, with a new action, which would be overwritten
-					// with a default right away without this check.
-					if (_curAction == prevAction)
-					{
-						switch (_state)
-						{
-							default:
-							case AiState.Idle: this.SwitchAction(Idle); break;
-							case AiState.Alert: this.SwitchAction(Alert); break;
-							case AiState.Aggro: this.SwitchAction(Aggro); break;
-							case AiState.Love: this.SwitchAction(Love); break;
-						}
-
-						_curAction.MoveNext();
-					}
-				}
+				this.DoState();
 			}
 			catch (Exception ex)
 			{
@@ -317,6 +293,46 @@ namespace Aura.Channel.Scripting.Scripts.Ai
 			finally
 			{
 				_inside = false;
+			}
+		}
+
+		/// <summary>
+		/// Calls Handle on all queued events.
+		/// </summary>
+		private void HandleQueuedEvents()
+		{
+			var events = this.GetQueuedEvents();
+			if (events != null && events.Count != 0)
+			{
+				foreach (var ev in events)
+					ev.Handle(this);
+			}
+		}
+
+		/// <summary>
+		/// Runs action for state.
+		/// </summary>
+		private void DoState()
+		{
+			var prevAction = _curAction;
+			if (_curAction == null || !_curAction.MoveNext())
+			{
+				// If action is switched on the last iteration we end up
+				// here, with a new action, which would be overwritten
+				// with a default right away without this check.
+				if (_curAction == prevAction)
+				{
+					switch (_state)
+					{
+						default:
+						case AiState.Idle: this.SwitchAction(Idle); break;
+						case AiState.Alert: this.SwitchAction(Alert); break;
+						case AiState.Aggro: this.SwitchAction(Aggro); break;
+						case AiState.Love: this.SwitchAction(Love); break;
+					}
+
+					_curAction.MoveNext();
+				}
 			}
 		}
 
