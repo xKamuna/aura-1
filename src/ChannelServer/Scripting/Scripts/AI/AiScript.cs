@@ -2,6 +2,7 @@
 // For more information, see license file in the main folder
 
 using Aura.Channel.Network.Sending;
+using Aura.Channel.Scripting.Scripts.Ai.Events;
 using Aura.Channel.Skills;
 using Aura.Channel.Skills.Base;
 using Aura.Channel.Skills.Combat;
@@ -49,6 +50,8 @@ namespace Aura.Channel.Scripting.Scripts.Ai
 		protected Creature _newAttackable;
 
 		protected Dictionary<AiState, Dictionary<AiEventType, Dictionary<SkillId, Func<IEnumerable>>>> _reactions;
+
+		private Queue<IAiEvent> _events;
 
 		// Heartbeat cache
 		protected IList<Creature> _playersInRange;
@@ -101,6 +104,8 @@ namespace Aura.Channel.Scripting.Scripts.Ai
 			_reactions[AiState.Aggro] = new Dictionary<AiEventType, Dictionary<SkillId, Func<IEnumerable>>>();
 			_reactions[AiState.Love] = new Dictionary<AiEventType, Dictionary<SkillId, Func<IEnumerable>>>();
 
+			_events = new Queue<IAiEvent>();
+
 			_state = AiState.Idle;
 			_aggroRadius = 500;
 			_aggroMaxRadius = 3000;
@@ -127,6 +132,33 @@ namespace Aura.Channel.Scripting.Scripts.Ai
 			_heartbeatTimer.Change(-1, -1);
 			_heartbeatTimer.Dispose();
 			_heartbeatTimer = null;
+		}
+
+		/// <summary>
+		/// Queues event to be handled on the start of the next heartbeat.
+		/// </summary>
+		/// <param name="ev"></param>
+		public void EnqueueEvent(IAiEvent ev)
+		{
+			lock (_events)
+				_events.Enqueue(ev);
+		}
+
+		/// <summary>
+		/// Queues event to be handled on the start of the next heartbeat.
+		/// </summary>
+		/// <param name="ev"></param>
+		private List<IAiEvent> GetQueuedEvents()
+		{
+			var events = new List<IAiEvent>();
+
+			lock (_events)
+			{
+				while (_events.Count != 0)
+					events.Add(_events.Dequeue());
+			}
+
+			return events;
 		}
 
 		/// <summary>
@@ -201,6 +233,16 @@ namespace Aura.Channel.Scripting.Scripts.Ai
 		}
 
 		/// <summary>
+		/// Raised when controlled creature dies.
+		/// </summary>
+		/// <param name="creature"></param>
+		/// <param name="killer"></param>
+		private void OnDeath(Creature creature, Creature killer)
+		{
+			this.EnqueueEvent(new DeathEvent());
+		}
+
+		/// <summary>
 		/// Main "loop".
 		/// </summary>
 		/// <param name="state"></param>
@@ -236,9 +278,17 @@ namespace Aura.Channel.Scripting.Scripts.Ai
 				if (this.Creature.IsDead)
 					return;
 
-				this.SelectState();
+				// Handle queued events
+				var events = this.GetQueuedEvents();
+				if (events != null && events.Count != 0)
+				{
+					foreach (var ev in events)
+						ev.Handle(this);
+				}
 
 				// Select and run state
+				this.SelectState();
+
 				var prevAction = _curAction;
 				if (_curAction == null || !_curAction.MoveNext())
 				{
@@ -656,6 +706,28 @@ namespace Aura.Channel.Scripting.Scripts.Ai
 			}
 		}
 
+		/// <summary>
+		/// Returns all reactions for the given state and type.
+		/// </summary>
+		/// <param name="state"></param>
+		/// <param name="type"></param>
+		/// <returns></returns>
+		public Dictionary<SkillId, Func<IEnumerable>> GetReactions(AiState state, AiEventType type)
+		{
+			lock (_reactions)
+			{
+				if (!_reactions.ContainsKey(state))
+					return null;
+
+				if (!_reactions[state].ContainsKey(type))
+					return null;
+
+				var reactions = _reactions[state][type];
+
+				return reactions.ToDictionary(a => a.Key, b => b.Value);
+			}
+		}
+
 		// Functions
 		// ------------------------------------------------------------------
 
@@ -756,7 +828,7 @@ namespace Aura.Channel.Scripting.Scripts.Ai
 		/// </remarks>
 		/// <param name="skillId"></param>
 		/// <param name="status"></param>
-		protected void SharpMind(SkillId skillId, SharpMindStatus status)
+		public void SharpMind(SkillId skillId, SharpMindStatus status)
 		{
 			// Some races are "immune" to Sharp Mind
 			if (this.Creature.RaceData.SharpMindImmune)
@@ -914,10 +986,18 @@ namespace Aura.Channel.Scripting.Scripts.Ai
 		// ------------------------------------------------------------------
 
 		/// <summary>
+		/// Clears action, so the state restarts.
+		/// </summary>
+		public void ClearAction()
+		{
+			_curAction = null;
+		}
+
+		/// <summary>
 		/// Clears AI and sets new current action.
 		/// </summary>
 		/// <param name="action"></param>
-		protected void SwitchAction(Func<IEnumerable> action)
+		public void SwitchAction(Func<IEnumerable> action)
 		{
 			this.ExecuteOnce(this.CancelSkill());
 
@@ -941,7 +1021,7 @@ namespace Aura.Channel.Scripting.Scripts.Ai
 		/// with a 0 timeout.
 		/// </remarks>
 		/// <param name="action"></param>
-		protected void ExecuteOnce(IEnumerable action)
+		public void ExecuteOnce(IEnumerable action)
 		{
 			action.GetEnumerator().MoveNext();
 		}

@@ -760,7 +760,7 @@ namespace Aura.Channel.Scripting.Scripts.Ai
 		/// Makes creature complete the currently loaded skill.
 		/// </summary>
 		/// <returns></returns>
-		protected IEnumerable CompleteSkill()
+		public IEnumerable CompleteSkill()
 		{
 			if (this.Creature.Skills.ActiveSkill == null)
 				yield break;

@@ -13,4 +13,9 @@ namespace Aura.Channel.Scripting.Scripts.Ai
 		KnockDown,
 		CriticalKnockDown,
 	}
+
+	public interface IAiEvent
+	{
+		void Handle(AiScript ai);
+	}
 }

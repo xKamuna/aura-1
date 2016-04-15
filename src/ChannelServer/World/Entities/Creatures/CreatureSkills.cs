@@ -35,6 +35,11 @@ namespace Aura.Channel.World.Entities.Creatures
 		public Skill ActiveSkill { get; set; }
 
 		/// <summary>
+		/// Id of the currently active skill.
+		/// </summary>
+		public SkillId ActiveSkillId { get { return (this.ActiveSkill == null ? SkillId.None : this.ActiveSkill.Info.Id); } }
+
+		/// <summary>
 		/// Raised when one of the creature's skill's rank changed.
 		/// </summary>
 		public event Action<Creature, Skill> RankChanged;

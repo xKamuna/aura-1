@@ -13,6 +13,7 @@ using Aura.Channel.Network.Sending;
 using Aura.Shared.Util;
 using Aura.Channel.Skills.Life;
 using Aura.Channel.Skills.Base;
+using Aura.Channel.Scripting.Scripts.Ai.Events;
 
 namespace Aura.Channel.Skills
 {
@@ -175,7 +176,7 @@ namespace Aura.Channel.Skills
 					var npc = action.Creature as NPC;
 					if (npc != null && npc.AI != null)
 					{
-						npc.AI.OnTargetActionHit(tAction);
+						npc.AI.EnqueueEvent(new HitEvent(tAction));
 					}
 
 					// Cancel target's skill
@@ -231,7 +232,7 @@ namespace Aura.Channel.Skills
 
 					var npc = action.Creature as NPC;
 					if (npc != null && npc.AI != null && action.SkillId != SkillId.CombatMastery)
-						npc.AI.OnUsedSkill(aAction);
+						npc.AI.EnqueueEvent(new UsedSkillEvent());
 
 					ChannelServer.Instance.Events.OnCreatureAttacks(aAction);
 				}

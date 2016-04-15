@@ -147,11 +147,13 @@
     <Compile Include="Scripting\Scripts\Ai\AggroLimit.cs" />
     <Compile Include="Scripting\Scripts\Ai\AggroType.cs" />
     <Compile Include="Scripting\Scripts\Ai\AiEvent.cs" />
-    <Compile Include="Scripting\Scripts\Ai\AiScript.Events.cs" />
     <Compile Include="Scripting\Scripts\Ai\AiScript.Routines.cs" />
     <Compile Include="Scripting\Scripts\Ai\AiScript.cs" />
     <Compile Include="Scripting\Scripts\Ai\AiScriptAttribute.cs" />
     <Compile Include="Scripting\Scripts\Ai\AiState.cs" />
+    <Compile Include="Scripting\Scripts\Ai\Events\DeathEvent.cs" />
+    <Compile Include="Scripting\Scripts\Ai\Events\HitEvent.cs" />
+    <Compile Include="Scripting\Scripts\Ai\Events\UsedSkillEvent.cs" />
     <Compile Include="Scripting\Scripts\DungeonScript.cs" />
     <Compile Include="Scripting\Scripts\GeneralScript.cs" />
     <Compile Include="Scripting\Scripts\DialogElements.cs" />
