@@ -276,11 +276,11 @@ namespace Aura.Channel.Scripting.Scripts.Ai
 					return;
 				}
 
-				if (this.Creature.IsDead)
-					return;
-
 				// Handle queued events
 				this.HandleQueuedEvents();
+
+				if (this.Creature.IsDead)
+					return;
 
 				// Select and run state
 				this.SelectState();

@@ -13,7 +13,7 @@ namespace Aura.Channel.Scripting.Scripts.Ai.Events
 		public void Handle(AiScript ai)
 		{
 			if (ai.Creature.Skills.ActiveSkill != null)
-				ai.SharpMind(ai.Creature.Skills.ActiveSkill.Info.Id, SharpMindStatus.Cancelling);
+				ai.SharpMind(SkillId.None, SharpMindStatus.Cancelling);
 		}
 	}
 }
