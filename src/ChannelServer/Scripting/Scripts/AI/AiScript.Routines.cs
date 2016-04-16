@@ -548,6 +548,10 @@ namespace Aura.Channel.Scripting.Scripts.Ai
 			stacks = Math2.Clamp(1, skill.RankData.StackMax, stacks);
 			while (skill.Stacks < stacks)
 			{
+				// Wait until creature isn't stunned anymore
+				if (this.Creature.IsStunned)
+					yield return true;
+
 				// Start loading
 				this.SharpMind(skill.Info.Id, SharpMindStatus.Loading);
 
@@ -612,10 +616,6 @@ namespace Aura.Channel.Scripting.Scripts.Ai
 		/// <returns></returns>
 		protected IEnumerable PrepareSkill(SkillId skillId, int stacks)
 		{
-			// Wait until creature isn't stunned anymore
-			if (this.Creature.IsStunned)
-				yield return true;
-
 			// Get skill
 			var skill = this.Creature.Skills.Get(skillId);
 			if (skill == null)
@@ -685,6 +685,10 @@ namespace Aura.Channel.Scripting.Scripts.Ai
 					{
 						Log.Unimplemented("AI.PrepareSkill: Skill prepare method for '{0}'.", skillId);
 					}
+
+					// Wait until creature isn't stunned anymore
+					if (this.Creature.IsStunned)
+						yield return true;
 
 					// Wait for loading to be done
 					foreach (var action in this.Wait(skill.RankData.LoadTime))
