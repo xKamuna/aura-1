@@ -348,10 +348,6 @@ namespace Aura.Channel.Scripting.Scripts.Ai
 				yield break;
 			}
 
-			// Wait until creature isn't stunned anymore
-			if (this.Creature.IsStunned)
-				yield return true;
-
 			timeout = Math2.Clamp(0, 300000, timeout);
 			var until = _timestamp + timeout;
 
@@ -381,6 +377,10 @@ namespace Aura.Channel.Scripting.Scripts.Ai
 				// Stop if target vanished somehow
 				if (this.Creature.Target == null)
 					yield break;
+
+				// Wait until creature isn't stunned anymore
+				if (this.Creature.IsStunned)
+					yield return true;
 
 				// Attack
 				var result = skillHandler.Use(this.Creature, skill, this.Creature.Target.EntityId);
@@ -510,10 +510,6 @@ namespace Aura.Channel.Scripting.Scripts.Ai
 		/// <returns></returns>
 		protected IEnumerable StackAttack(SkillId skillId, int stacks = 1, int timeout = 30000)
 		{
-			// Wait until creature isn't stunned anymore
-			if (this.Creature.IsStunned)
-				yield return true;
-
 			var target = this.Creature.Target;
 			var until = _timestamp + Math.Max(0, timeout);
 
@@ -582,6 +578,10 @@ namespace Aura.Channel.Scripting.Scripts.Ai
 			{
 				if (_timestamp >= until)
 					break;
+
+				// Wait until creature isn't stunned anymore
+				if (this.Creature.IsStunned)
+					yield return true;
 
 				combatHandler.Use(this.Creature, skill, target.EntityId);
 				yield return true;
@@ -711,10 +711,6 @@ namespace Aura.Channel.Scripting.Scripts.Ai
 		/// <returns></returns>
 		protected IEnumerable CancelSkill()
 		{
-			// Wait until creature isn't stunned anymore
-			if (this.Creature.IsStunned)
-				yield return true;
-
 			if (this.Creature.Skills.ActiveSkill != null)
 			{
 				this.SharpMind(this.Creature.Skills.ActiveSkill.Info.Id, SharpMindStatus.Cancelling);
@@ -775,10 +771,6 @@ namespace Aura.Channel.Scripting.Scripts.Ai
 				Log.Unimplemented("AI.CompleteSkill: Missing handler or ICompletable for '{0}'.", skillId);
 				yield break;
 			}
-
-			// Wait until creature isn't stunned anymore
-			if (this.Creature.IsStunned)
-				yield return true;
 
 			// Run complete
 			try
