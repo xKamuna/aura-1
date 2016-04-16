@@ -726,7 +726,7 @@ namespace Aura.Channel.Scripting.Scripts.Ai
 		/// <returns></returns>
 		protected IEnumerable UseSkill()
 		{
-			var activeSkillId = this.Creature.Skills.ActiveSkill != null ? this.Creature.Skills.ActiveSkill.Info.Id : SkillId.None;
+			var activeSkillId = this.Creature.Skills.ActiveSkillId;
 			if (activeSkillId == SkillId.None)
 				yield break;
 
