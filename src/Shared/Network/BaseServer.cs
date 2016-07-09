@@ -120,8 +120,7 @@ namespace Aura.Shared.Network
 				// We don't need this here, since it's inherited from the parent
 				// client.Socket.NoDelay = true;
 
-				client.Socket.BeginReceive(client.Buffer, 0, client.Buffer.Length, SocketFlags.None, this.OnReceive, client);
-
+				this.AddReceivingClient(client);
 				this.AddClient(client);
 				Log.Info("Connection established from '{0}.", client.Address);
 
@@ -146,7 +145,7 @@ namespace Aura.Shared.Network
 		/// <param name="client"></param>
 		public void AddReceivingClient(TClient client)
 		{
-			client.Socket.BeginReceive(client.Buffer, 0, client.Buffer.Length, SocketFlags.None, this.OnReceive, client);
+			client.Socket.BeginReceive(client.Buffer.Front, 0, client.Buffer.Front.Length, SocketFlags.None, this.OnReceive, client);
 		}
 
 		/// <summary>
@@ -160,7 +159,7 @@ namespace Aura.Shared.Network
 			try
 			{
 				int bytesReceived = client.Socket.EndReceive(result);
-				int ptr = 0;
+				//int ptr = 0;
 
 				if (bytesReceived == 0)
 				{
@@ -170,25 +169,27 @@ namespace Aura.Shared.Network
 					return;
 				}
 
+				this.ParseStream(client, bytesReceived, ref client.Buffer.Remaining, ref client.Buffer.Ptr, ref client.Buffer.Front, ref client.Buffer.Back, this.HandleBuffer);
+
 				// Handle all received bytes
-				while (bytesReceived > 0)
-				{
-					// Length of new packet
-					int length = this.GetPacketLength(client.Buffer, ptr);
+				//while (bytesReceived > 0)
+				//{
+				//	// Length of new packet
+				//	int length = this.GetPacketLength(client.Buffer, ptr);
 
-					// Shouldn't actually happen...
-					if (length > client.Buffer.Length)
-						throw new Exception(string.Format("Buffer too small to receive full packet ({0}).", length));
+				//	// Shouldn't actually happen...
+				//	if (length > client.Buffer.Length)
+				//		throw new Exception(string.Format("Buffer too small to receive full packet ({0}).", length));
 
-					// Read whole packet and ...
-					var buffer = new byte[length];
-					Buffer.BlockCopy(client.Buffer, ptr, buffer, 0, length);
-					bytesReceived -= length;
-					ptr += length;
+				//	// Read whole packet and ...
+				//	var buffer = new byte[length];
+				//	Buffer.BlockCopy(client.Buffer, ptr, buffer, 0, length);
+				//	bytesReceived -= length;
+				//	ptr += length;
 
-					// Handle it
-					this.HandleBuffer(client, buffer);
-				}
+				//	// Handle it
+				//	this.HandleBuffer(client, buffer);
+				//}
 
 				// Stop if client was killed while handling.
 				if (client.State == ClientState.Dead)
@@ -200,7 +201,7 @@ namespace Aura.Shared.Network
 				}
 
 				// Round $round+1, receive!
-				client.Socket.BeginReceive(client.Buffer, 0, client.Buffer.Length, SocketFlags.None, this.OnReceive, client);
+				client.Socket.BeginReceive(client.Buffer.Front, 0, client.Buffer.Front.Length, SocketFlags.None, this.OnReceive, client);
 			}
 			catch (SocketException)
 			{
@@ -216,6 +217,51 @@ namespace Aura.Shared.Network
 				Log.Exception(ex, "While receiving data from '{0}'.", client.Address);
 				this.KillAndRemoveClient(client);
 				this.OnClientDisconnected(client);
+			}
+		}
+
+		protected void ParseStream(TClient client, int length, ref int remaining, ref int ptr, ref byte[] buffer, ref byte[] backBuffer, Action<TClient, byte[]> handler)
+		{
+			var copyLength = 0;
+			int read = 0;
+
+			while (read < length)
+			{
+				// Copy header, or as many bytes as left over, to the back
+				// buffer on a new packet.
+				if (remaining == 0)
+				{
+					copyLength = Math.Min(5, length - read);
+					Buffer.BlockCopy(buffer, read, backBuffer, ptr, copyLength);
+					read += copyLength;
+					ptr += copyLength;
+
+					if (ptr < 4)
+						break;
+				}
+
+				// Read new packet's length from header in back buffer
+				if (remaining == 0)
+					remaining = this.GetPacketLength(backBuffer, 0) - ptr;
+
+				// Copy the whole packet to the back buffer,
+				// or as many bytes from the packet as possible.
+				copyLength = Math.Min(remaining, length - read);
+				Buffer.BlockCopy(buffer, read, backBuffer, ptr, copyLength);
+				read += copyLength;
+				remaining -= copyLength;
+				ptr += copyLength;
+
+				if (remaining == 0)
+				{
+					var arr = new byte[ptr];
+					Buffer.BlockCopy(buffer, 0, arr, 0, ptr);
+
+					handler(client, arr);
+
+					remaining = 0;
+					ptr = 0;
+				}
 			}
 		}
 

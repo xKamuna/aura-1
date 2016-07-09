@@ -14,11 +14,8 @@ namespace Aura.Shared.Network
 	/// </summary>
 	public abstract class BaseClient
 	{
-		// Largest known packet is composing on R1, up to ~3700 bytes.
-		private const int BufferDefaultSize = 4096;
-
 		public Socket Socket { get; set; }
-		public byte[] Buffer { get; set; }
+		public TcpBuffer Buffer { get; set; }
 		public ClientState State { get; set; }
 		public MabiCrypto Crypto { get; set; }
 
@@ -45,7 +42,7 @@ namespace Aura.Shared.Network
 
 		protected BaseClient()
 		{
-			this.Buffer = new byte[BufferDefaultSize];
+			this.Buffer = new TcpBuffer();
 			this.Crypto = new MabiCrypto(0x0, true); // 0xAura 0x41757261
 		}
 
