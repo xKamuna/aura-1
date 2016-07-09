@@ -255,7 +255,7 @@ namespace Aura.Shared.Network
 				if (remaining == 0)
 				{
 					var arr = new byte[ptr];
-					Buffer.BlockCopy(buffer, 0, arr, 0, ptr);
+					Buffer.BlockCopy(backBuffer, 0, arr, 0, ptr);
 
 					handler(client, arr);
 
