@@ -355,7 +355,7 @@ namespace Aura.Channel.World.Entities
 		/// <summary>
 		/// Changes stance and broadcasts update.
 		/// </summary>
-		public bool IsInBattleStance { get { return _battleStance; } set { _battleStance = value; Send.ChangeStance(this); } }
+		public bool IsInBattleStance { get { return _battleStance; } set { _battleStance = value; if (!value) AttemptingAttack = false; Send.ChangeStance(this); } }
 		public Creature Target { get; set; }
 
 		private int _stun;
@@ -426,6 +426,25 @@ namespace Aura.Channel.World.Entities
 
 		public bool IsDead { get { return this.Has(CreatureStates.Dead); } }
 		public bool IsStunned { get { return (this.Stun > 0); } }
+		public DateTime AttackDelayTime { get; set; }
+		public bool IsOnAttackDelay { get { return (DateTime.Now < this.AttackDelayTime); } }
+		public SkillId InterceptingSkillId { get; set; }
+		public bool AttemptingAttack { get; set; }
+		public Creature LastKnockedBackBy { get; set; }
+
+		/// <summary>
+		/// Basic attack filter.  All tags, creature states, and creatures within this filter cannot be attacked.
+		/// </summary>
+		public List<object> AttackFilter { get; set; }
+
+		/// <summary>
+		/// Basic attack filter override.  All tags, creature states, and creatures within this filter can be attacked, even if they are also in the AttackFilter.
+		/// </summary>
+		public List<object> AttackOverride { get; set; }
+
+		public DateTime InvincibilityTime { get; set; }
+
+		public bool IsInvincible { get { return (DateTime.Now < this.InvincibilityTime); } }
 
 		public bool WasKnockedBack { get; set; }
 
@@ -489,9 +508,21 @@ namespace Aura.Channel.World.Entities
 		public DateTime KnockDownTime { get; set; }
 
 		/// <summary>
+		/// Holds the time at which the invulnerability time is over.
+		/// </summary>
+		public DateTime NotReadyToBeHitTime { get; set; }
+
+		/// <summary>
 		/// Returns true if creature is currently knocked down.
 		/// </summary>
 		public bool IsKnockedDown { get { return (DateTime.Now < this.KnockDownTime); } }
+
+		/// <summary>
+		/// Returns true if creature is not able to get hit yet.
+		/// </summary>
+		public bool IsNotReadyToBeHit { get { return (DateTime.Now < this.NotReadyToBeHitTime); } }
+
+		public bool IgnoreAttackRange { get; set; }
 
 		/// <summary>
 		/// Returns true if creature is able to run while having ranged loaded,
@@ -1113,6 +1144,9 @@ namespace Aura.Channel.World.Entities
 
 			this.Vars = new ScriptVariables();
 
+			this.AttackFilter = new List<object>();
+			this.AttackOverride = new List<object>();
+
 			_inquiryCallbacks = new Dictionary<byte, Action<Creature>>();
 			_hitTrackers = new Dictionary<long, HitTracker>();
 		}
@@ -1671,6 +1705,59 @@ namespace Aura.Channel.World.Entities
 		{
 			if (this.IsDead || creature.IsDead || creature == this)
 				return false;
+
+			return true;
+		}
+
+		/// <summary>
+		/// Returns true if creature is able to attack this creature.
+		/// </summary>
+		/// <param name="creature"></param>
+		/// <returns></returns>
+		public bool CanAttack(Creature creature)
+		{
+			if (creature.IsInvincible)
+				return false;
+			//Check override first...
+			foreach (object target in this.AttackOverride)
+			{
+				//Check state first, then tag, then the creature itself.
+				if (target is CreatureStates)
+				{
+					if (creature.Has((CreatureStates)target))
+						return true;
+				}
+				else if (target is string)
+				{
+					if (creature.HasTag((string)target))
+						return true;
+				}
+				else
+				{
+					if (creature == target)
+						return true;
+				}
+			}
+			//Then check the actual filter.
+			foreach (object target in this.AttackFilter)
+			{
+				//Check state first, then tag, then the creature itself.
+				if (target is CreatureStates)
+				{
+					if (creature.Has((CreatureStates)target))
+						return false;
+				}
+				else if (target is string)
+				{
+					if (creature.HasTag((string)target))
+						return false;
+				}
+				else
+				{
+					if (creature == target)
+						return false;
+				}
+			}
 
 			return true;
 		}
@@ -2748,6 +2835,21 @@ namespace Aura.Channel.World.Entities
 			target.SetPosition(newPos.X, newPos.Y);
 
 			return newPos;
+		}
+
+		public void GetBackUp(object sender, System.Timers.ElapsedEventArgs e, System.Timers.Timer getUpTimer)
+		{
+			getUpTimer.Enabled = false;
+			// Recover from knock back/down after stun ended
+			if (this.Region != Region.Limbo && this.WasKnockedBack)
+			{
+				if (!IsMoving)
+				{
+					Send.RiseFromTheDead(this);
+				}
+				this.WasKnockedBack = false;
+			}
+			getUpTimer = null;
 		}
 
 		/// <summary>

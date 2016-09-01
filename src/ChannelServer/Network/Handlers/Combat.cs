@@ -90,6 +90,15 @@ namespace Aura.Channel.Network.Handlers
 
 			// Purpose unknown, without this the client doesn't seem to
 			// accept the stun time, you can spam attacks.
+			// This updates the target so that it knows that you're attacking!  It lets you determine when someone is trying to attack. - Kamuna
+			if (targetEntityId == 0)
+			{
+				creature.AttemptingAttack = false;
+			}
+			else
+			{
+				creature.AttemptingAttack = true;
+			}
 			Send.CombatTargetUpdate(creature, targetEntityId);
 		}
 
@@ -121,6 +130,27 @@ namespace Aura.Channel.Network.Handlers
 
 			var creature = client.GetCreatureSafe(packet.Id);
 
+			// Get skill
+			var skill = creature.Skills.ActiveSkill;
+			var combatMastery = creature.Skills.Get(SkillId.CombatMastery);
+			if (skill == null && (skill = combatMastery) == null)
+			{
+				Log.Warning("CombatAttack: Creature '{0}' doesn't have Combat Mastery.", creature.Name);
+				goto L_End;
+			}
+			if (skill == combatMastery || skill == null)
+			{
+				if (targetEntityId == 0)
+				{
+					creature.AttemptingAttack = false;
+				}
+				else
+				{
+					creature.AttemptingAttack = true;
+				}
+				Send.CombatTargetUpdate(creature, targetEntityId);
+			}
+
 			// Check lock
 			if (!creature.Can(Locks.Attack))
 			{
@@ -136,14 +166,6 @@ namespace Aura.Channel.Network.Handlers
 			// Check Stun
 			if (creature.IsStunned)
 				goto L_End;
-
-			// Get skill
-			var skill = creature.Skills.ActiveSkill;
-			if (skill == null && (skill = creature.Skills.Get(SkillId.CombatMastery)) == null)
-			{
-				Log.Warning("CombatAttack: Creature '{0}' doesn't have Combat Mastery.", creature.Name);
-				goto L_End;
-			}
 
 			// Get handler
 			var skillHandler = ChannelServer.Instance.SkillManager.GetHandler<ISkillHandler>(skill.Info.Id);

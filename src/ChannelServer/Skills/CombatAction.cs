@@ -13,6 +13,7 @@ using Aura.Channel.Network.Sending;
 using Aura.Shared.Util;
 using Aura.Channel.Skills.Life;
 using Aura.Channel.Skills.Base;
+using Aura.Data;
 
 namespace Aura.Channel.Skills
 {
@@ -237,8 +238,30 @@ namespace Aura.Channel.Skills
 					// Remember knock back/down
 					tAction.Creature.WasKnockedBack = tAction.Has(TargetOptions.KnockBack) || tAction.Has(TargetOptions.KnockDown) || tAction.Has(TargetOptions.Smash);
 
-					if (tAction.Has(TargetOptions.KnockDown))
+					if (tAction.Has(TargetOptions.KnockDown) || tAction.Has(TargetOptions.Smash))
+					{
 						tAction.Creature.KnockDownTime = DateTime.Now.AddMilliseconds(tAction.Stun);
+						if (AuraData.FeaturesDb.IsEnabled("CombatSystemRenewal"))
+						{
+							tAction.Creature.NotReadyToBeHitTime = DateTime.Now.AddMilliseconds(tAction.Stun * 0.55); //0.55 is just a guesstimate, actual official time unknown.
+						}
+						else
+						{
+							tAction.Creature.NotReadyToBeHitTime = DateTime.Now.AddMilliseconds(tAction.Stun);
+						}
+						if (!tAction.Creature.IsDead)
+						{
+							//Timer for getting back up. TODO: Link this to NotReadyToBeHit/KnockDownTime instead?
+							System.Timers.Timer getUpTimer = new System.Timers.Timer(AuraData.FeaturesDb.IsEnabled("CombatSystemRenewal") && tAction.Creature.IsCharacter && tAction.Stun > 2000 ? 2000 : tAction.Stun);
+
+							getUpTimer.Elapsed += (sender, e) => { if (tAction.Creature != null) { tAction.Creature.GetBackUp(sender, e, getUpTimer); } };
+							getUpTimer.Enabled = true;
+						}
+					}
+					if (tAction.Creature.WasKnockedBack)
+					{
+						tAction.Creature.LastKnockedBackBy = this.Attacker;
+					}
 
 					// Stability meter
 					// TODO: Limit it to "targetees"?

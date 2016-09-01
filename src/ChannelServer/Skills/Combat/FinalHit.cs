@@ -177,6 +177,8 @@ namespace Aura.Channel.Skills.Combat
 			}
 
 			var attackerSkill = tAction.Attacker.Skills.Get(SkillId.FinalHit);
+			if (attackerSkill == null) //For some reason, this is sometimes null.
+				return;
 
 			if (attackerSkill.Info.Rank >= SkillRank.RF && attackerSkill.Info.Rank <= SkillRank.RE)
 			{

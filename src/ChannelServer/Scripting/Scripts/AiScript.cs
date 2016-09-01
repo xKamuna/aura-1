@@ -242,6 +242,11 @@ namespace Aura.Channel.Scripting.Scripts
 
 				this.SelectState();
 
+				if (this.Creature.IsKnockedDown || this.Creature.WasKnockedBack)
+				{
+					this.Creature.AttemptingAttack = true;
+				}
+
 				// Stop and clear if stunned
 				if (this.Creature.IsStunned)
 				{
@@ -269,7 +274,7 @@ namespace Aura.Channel.Scripting.Scripts
 							case AiState.Aggro: this.SwitchAction(Aggro); break;
 							case AiState.Love: this.SwitchAction(Love); break;
 						}
-
+						this.Creature.AttemptingAttack = false;
 						_curAction.MoveNext();
 					}
 				}
@@ -304,7 +309,10 @@ namespace Aura.Channel.Scripting.Scripts
 			_state = AiState.Idle;
 
 			if (this.Creature.IsInBattleStance)
+			{
 				this.Creature.IsInBattleStance = false;
+				this.Creature.AttemptingAttack = false;
+			}
 
 			if (this.Creature.Target != null)
 			{
@@ -1352,10 +1360,19 @@ namespace Aura.Channel.Scripting.Scripts
 					yield break;
 
 				// Attack
+				if (!this.Creature.AttemptingAttack)
+				{
+					this.Creature.AttemptingAttack = true;
+				}
+				if (!this.Creature.CanAttack(this.Creature.Target))
+				{
+					yield return true;
+				}
 				var result = skillHandler.Use(this.Creature, skill, this.Creature.Target.EntityId);
 				if (result == CombatSkillResult.Okay)
 				{
 					// Stop when max attack count is reached
+					this.Creature.AttemptingAttack = false;
 					if (++i >= count)
 						break;
 

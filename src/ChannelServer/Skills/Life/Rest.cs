@@ -35,6 +35,9 @@ namespace Aura.Channel.Skills.Life
 		{
 			creature.StopMove();
 
+			creature.IsInBattleStance = false;
+			creature.AttemptingAttack = false;
+
 			var chairItemEntityId = dict.GetLong("ITEMID");
 
 			if (chairItemEntityId != 0)
