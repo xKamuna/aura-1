@@ -1364,10 +1364,7 @@ namespace Aura.Channel.Scripting.Scripts
 				{
 					this.Creature.AttemptingAttack = true;
 				}
-				if (!this.Creature.CanAttack(this.Creature.Target))
-				{
-					yield return true;
-				}
+
 				var result = skillHandler.Use(this.Creature, skill, this.Creature.Target.EntityId);
 				if (result == CombatSkillResult.Okay)
 				{

@@ -53,28 +53,27 @@ namespace Aura.Channel.Skills.Combat
 			if (mainTarget == null)
 				return CombatSkillResult.Okay;
 
-			if (mainTarget.IsNotReadyToBeHit && attacker.InterceptingSkillId == SkillId.None)
-				return CombatSkillResult.Okay;
-
-			if ((attacker.IsStunned || attacker.IsOnAttackDelay) && attacker.InterceptingSkillId == SkillId.None)
-				return CombatSkillResult.Okay;
-
 			var attackerPosition = attacker.GetPosition();
 			var mainTargetPosition = mainTarget.GetPosition();
-			if (!attacker.IgnoreAttackRange &&
-				(!attackerPosition.InRange(mainTargetPosition, attacker.AttackRangeFor(mainTarget))))
-			{ return CombatSkillResult.OutOfRange; }
-			if (!attacker.IgnoreAttackRange &&
-				(attacker.Region.Collisions.Any(attackerPosition, mainTargetPosition) // Check collisions between position
-				|| mainTarget.Conditions.Has(ConditionsA.Invisible))) // Check visiblility (GM)
-			{ return CombatSkillResult.Okay; }
 
-			attacker.IgnoreAttackRange = false;
+			if (!attackerPosition.InRange(mainTargetPosition, attacker.AttackRangeFor(mainTarget)))
+				return CombatSkillResult.OutOfRange;
+
+			if (attacker.Region.Collisions.Any(attackerPosition, mainTargetPosition)) // Check collisions between position
+				return CombatSkillResult.Okay;
+
+			return UseWithoutRangeCheck(attacker, skill, targetEntityId, mainTarget);
+		}
+
+		public CombatSkillResult UseWithoutRangeCheck(Creature attacker, Skill skill, long targetEntityId, Creature mainTarget, SkillId interceptingSkillId = SkillId.None)
+		{
+			if (mainTarget.Conditions.Has(ConditionsA.Invisible)) // Check visiblility (GM)
+				return CombatSkillResult.Okay;
 
 			//Against Smash
 			Skill smash = mainTarget.Skills.Get(SkillId.Smash);
-			if (smash != null && mainTarget.Skills.IsReady(SkillId.Smash) && attacker.CanAttack(mainTarget))
-				attacker.InterceptingSkillId = SkillId.Smash;
+			if (interceptingSkillId == SkillId.None && smash != null && mainTarget.Skills.IsReady(SkillId.Smash))
+				interceptingSkillId = SkillId.Smash;
 
 			var rightWeapon = attacker.Inventory.RightHand;
 			var leftWeapon = attacker.Inventory.LeftHand;
@@ -83,14 +82,18 @@ namespace Aura.Channel.Skills.Combat
 			// Against Combat Mastery
 			Skill combatMastery = mainTarget.Skills.Get(SkillId.CombatMastery);
 			var simultaneousAttackStun = 0;
-			if (attacker.InterceptingSkillId != SkillId.CombatMastery && mainTarget.InterceptingSkillId != SkillId.CombatMastery)
+			if (interceptingSkillId == SkillId.None)
 			{
-				if (combatMastery != null && (mainTarget.Skills.ActiveSkill == null || mainTarget.Skills.ActiveSkill == combatMastery || mainTarget.Skills.IsReady(SkillId.FinalHit)) && mainTarget.IsInBattleStance && mainTarget.Target == attacker && mainTarget.AttemptingAttack && (!mainTarget.IsStunned || mainTarget.IsKnockedDown) && attacker.CanAttack(mainTarget))
+				if (combatMastery != null && (mainTarget.Skills.ActiveSkill == null || mainTarget.Skills.ActiveSkill == combatMastery || mainTarget.Skills.IsReady(SkillId.FinalHit)) && mainTarget.IsInBattleStance && mainTarget.Target == attacker && mainTarget.AttemptingAttack && (!mainTarget.IsStunned || mainTarget.IsKnockedDown))
 				{
 					var attackerStunTime = CombatMastery.GetAttackerStun(attacker, attacker.RightHand, false);
 					var mainTargetStunTime = CombatMastery.GetAttackerStun(mainTarget, mainTarget.Inventory.RightHand, false);
-					double chances = ((((2725 - attackerStunTime) / 2500) * 320) - (((2725 - mainTargetStunTime) / 2500) * 320)) + 50; //Probability in percentage that you will not lose.  2725 is 2500 (Slowest stun) + 225 (Fastest stun divided by two so that the fastest stun isn't 100%)
-					chances = Math2.Clamp(0.0, 99.0, chances);
+					var slowestStun = CombatMastery.GetAttackerStun(1, AttackSpeed.VerySlow, false);
+					var additionalStun = slowestStun + (CombatMastery.GetAttackerStun(5, AttackSpeed.VeryFast, false) / 2); //Fastest stun divided by two so that the fastest stun doesn't always beat out the slowest stun.  The addition is so that the subtration (Ex. additionalStun - attackerStunTime) ends in the desired range.
+					var formulaMultiplier = 320; //Multiplier to keep the result reasonable, found through trial and error?
+					var formulaEqualizer = 50; //Balances the subtraction to keep the result in a reasonable range and balanced out no matter the order.
+					double chances = ((((additionalStun - attackerStunTime) / slowestStun) * formulaMultiplier) - (((additionalStun - mainTargetStunTime) / slowestStun) * formulaMultiplier)) + formulaEqualizer; //Probability in percentage that you will not lose.
+					chances = Math2.Clamp(0.0, 99.0, chances); //Cap the stun, just in case.
 
 					if (((mainTarget.LastKnockedBackBy == attacker && mainTarget.KnockDownTime > attacker.KnockDownTime && mainTarget.KnockDownTime.AddMilliseconds(mainTargetStunTime) > DateTime.Now ||
 						/*attackerStunTime > initialTargetStunTime && */
@@ -98,27 +101,23 @@ namespace Aura.Channel.Skills.Combat
 					{
 						if (!Math2.Probability(chances)) //Probability in percentage that it will be an interception instead of a double hit.  Always in favor of the faster attacker.
 						{
-							if (mainTarget.CanAttack(attacker))
+							if (mainTarget.CanTarget(attacker) && mainTarget.Can(Locks.Attack)) //TODO: Add Hit lock when available.
 							{
-								mainTarget.InterceptingSkillId = SkillId.CombatMastery;
-								mainTarget.IgnoreAttackRange = true;
 								var skillHandler = ChannelServer.Instance.SkillManager.GetHandler<ICombatSkill>(combatMastery.Info.Id);
 								if (skillHandler == null)
 								{
 									Log.Error("CombatMastery.Use: Target's skill handler not found for '{0}'.", combatMastery.Info.Id);
 									return CombatSkillResult.Okay;
 								}
-								skillHandler.Use(mainTarget, combatMastery, attacker.EntityId);
+								((CombatMastery)skillHandler).UseWithoutRangeCheck(mainTarget, combatMastery, attacker.EntityId, attacker, SkillId.CombatMastery);
 								return CombatSkillResult.Okay;
 							}
 						}
 						else
 						{
-							attacker.InterceptingSkillId = SkillId.CombatMastery;
-							if (mainTarget.CanAttack(attacker))
+							interceptingSkillId = SkillId.CombatMastery;
+							if (mainTarget.CanTarget(attacker) && mainTarget.Can(Locks.Attack)) //TODO: Add Hit lock when available.
 							{
-								mainTarget.InterceptingSkillId = SkillId.CombatMastery;
-								mainTarget.IgnoreAttackRange = true;
 								var skillHandler = ChannelServer.Instance.SkillManager.GetHandler<ICombatSkill>(combatMastery.Info.Id);
 								if (skillHandler == null)
 								{
@@ -126,7 +125,7 @@ namespace Aura.Channel.Skills.Combat
 								}
 								else
 								{
-									skillHandler.Use(mainTarget, combatMastery, attacker.EntityId);
+									((CombatMastery)skillHandler).UseWithoutRangeCheck(mainTarget, combatMastery, attacker.EntityId, attacker, SkillId.CombatMastery);
 									simultaneousAttackStun = attacker.Stun;
 									attacker.Stun = 0;
 								}
@@ -137,15 +136,13 @@ namespace Aura.Channel.Skills.Combat
 					{
 						if (Math2.Probability(chances)) //Probability in percentage that it will be an interception instead of a double hit.  Always in favor of the faster attacker.
 						{
-							attacker.InterceptingSkillId = SkillId.CombatMastery;
+							interceptingSkillId = SkillId.CombatMastery;
 						}
 						else
 						{
-							attacker.InterceptingSkillId = SkillId.CombatMastery;
-							if (mainTarget.CanAttack(attacker))
+							interceptingSkillId = SkillId.CombatMastery;
+							if (mainTarget.CanTarget(attacker) && mainTarget.Can(Locks.Attack)) //TODO: Add Hit lock when available.
 							{
-								mainTarget.InterceptingSkillId = SkillId.CombatMastery;
-								mainTarget.IgnoreAttackRange = true;
 								var skillHandler = ChannelServer.Instance.SkillManager.GetHandler<ICombatSkill>(combatMastery.Info.Id);
 								if (skillHandler == null)
 								{
@@ -153,7 +150,7 @@ namespace Aura.Channel.Skills.Combat
 								}
 								else
 								{
-									skillHandler.Use(mainTarget, combatMastery, attacker.EntityId);
+									((CombatMastery)skillHandler).UseWithoutRangeCheck(mainTarget, combatMastery, attacker.EntityId, attacker, SkillId.CombatMastery);
 									simultaneousAttackStun = attacker.Stun;
 									attacker.Stun = 0;
 								}
@@ -164,7 +161,7 @@ namespace Aura.Channel.Skills.Combat
 			}
 
 			attacker.StopMove();
-			mainTargetPosition = mainTarget.StopMove();
+			mainTarget.StopMove();
 
 			// Get targets, incl. splash.
 			var targets = new HashSet<Creature>() { mainTarget };
@@ -185,11 +182,11 @@ namespace Aura.Channel.Skills.Combat
 
 				AttackerAction aAction;
 
-				if (attacker.InterceptingSkillId == SkillId.Smash)
+				if (interceptingSkillId == SkillId.Smash)
 				{
 					aAction = new AttackerAction(CombatActionType.SimultaneousHit, attacker, targetEntityId);
 				}
-				else if (attacker.InterceptingSkillId == SkillId.CombatMastery)
+				else if (interceptingSkillId == SkillId.CombatMastery)
 				{
 					aAction = new AttackerAction(CombatActionType.SimultaneousHit, attacker, targetEntityId);
 				}
@@ -207,7 +204,7 @@ namespace Aura.Channel.Skills.Combat
 				}
 
 				var cap = new CombatActionPack(attacker, skill.Info.Id);
-				if (attacker.InterceptingSkillId != SkillId.Smash)
+				if (interceptingSkillId != SkillId.Smash)
 					cap.Add(aAction);
 				cap.Hit = i;
 				cap.Type = (attacker.IsDualWielding ? CombatActionPackType.TwinSwordAttack : CombatActionPackType.NormalAttack);
@@ -227,11 +224,11 @@ namespace Aura.Channel.Skills.Combat
 
 					if (target == mainTarget)
 					{
-						if (attacker.InterceptingSkillId == SkillId.Smash)
+						if (interceptingSkillId == SkillId.Smash)
 						{
 							tAction = new TargetAction(CombatActionType.CounteredHit, target, attacker, SkillId.Smash);
 						}
-						else if (attacker.InterceptingSkillId == SkillId.CombatMastery)
+						else if (interceptingSkillId == SkillId.CombatMastery)
 						{
 							tAction = new TargetAction(CombatActionType.CounteredHit, target, attacker, target.Skills.IsReady(SkillId.FinalHit) ? SkillId.FinalHit : SkillId.CombatMastery);
 						}
@@ -239,20 +236,18 @@ namespace Aura.Channel.Skills.Combat
 						{
 							tAction = new TargetAction(CombatActionType.TakeHit, target, attacker, target.Skills.IsReady(SkillId.FinalHit) ? SkillId.FinalHit : SkillId.CombatMastery);
 						}
-
-						attacker.InterceptingSkillId = SkillId.None;
 					}
 					else
 					{
 						tAction = new TargetAction(CombatActionType.TakeHit, target, attacker, target.Skills.IsReady(SkillId.FinalHit) ? SkillId.FinalHit : SkillId.CombatMastery);
 					}
 
-					tAction.Set(TargetOptions.Result);					
+					tAction.Set(TargetOptions.Result);
 
 					cap.Add(tAction);
-					if (target == mainTarget && attacker.InterceptingSkillId == SkillId.Smash)
+					if (target == mainTarget && interceptingSkillId == SkillId.Smash)
 						cap.Add(aAction);
-					
+
 
 					// Base damage
 					var damage = mainDamage;

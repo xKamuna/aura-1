@@ -163,8 +163,8 @@ namespace Aura.Channel.Network.Handlers
 			if (target == null || !creature.CanTarget(target))
 				goto L_End;
 
-			// Check Stun
-			if (creature.IsStunned)
+			// Check stun and invincibility
+			if (creature.IsStunned || target.IsNotReadyToBeHit)
 				goto L_End;
 
 			// Get handler

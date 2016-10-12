@@ -249,14 +249,6 @@ namespace Aura.Channel.Skills
 						{
 							tAction.Creature.NotReadyToBeHitTime = DateTime.Now.AddMilliseconds(tAction.Stun);
 						}
-						if (!tAction.Creature.IsDead)
-						{
-							//Timer for getting back up. TODO: Link this to NotReadyToBeHit/KnockDownTime instead?
-							System.Timers.Timer getUpTimer = new System.Timers.Timer(AuraData.FeaturesDb.IsEnabled("CombatSystemRenewal") && tAction.Creature.IsCharacter && tAction.Stun > 2000 ? 2000 : tAction.Stun);
-
-							getUpTimer.Elapsed += (sender, e) => { if (tAction.Creature != null) { tAction.Creature.GetBackUp(sender, e, getUpTimer); } };
-							getUpTimer.Enabled = true;
-						}
 					}
 					if (tAction.Creature.WasKnockedBack)
 					{

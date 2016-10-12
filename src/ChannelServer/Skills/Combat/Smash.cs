@@ -107,95 +107,87 @@ namespace Aura.Channel.Skills.Combat
 			if (mainTarget == null)
 				return CombatSkillResult.InvalidTarget;
 
-			if (mainTarget.IsNotReadyToBeHit && attacker.InterceptingSkillId == SkillId.None)
-				return CombatSkillResult.Okay;
-
-			if ((attacker.IsStunned || attacker.IsOnAttackDelay) && attacker.InterceptingSkillId == SkillId.None)
-				return CombatSkillResult.Okay;
-
 			// Check range
 			var attackerPosition = attacker.GetPosition();
 			var mainTargetPosition = mainTarget.GetPosition();
-			if (!attacker.IgnoreAttackRange &&
-				(!attackerPosition.InRange(mainTargetPosition, attacker.AttackRangeFor(mainTarget))))
-			{ return CombatSkillResult.OutOfRange; }
-			if (!attacker.IgnoreAttackRange &&
-				(attacker.Region.Collisions.Any(attackerPosition, mainTargetPosition) // Check collisions between position
-				|| mainTarget.Conditions.Has(ConditionsA.Invisible))) // Check visiblility (GM)
-			{ return CombatSkillResult.Okay; }
 
-			attacker.IgnoreAttackRange = false;
+			if (!attackerPosition.InRange(mainTargetPosition, attacker.AttackRangeFor(mainTarget)))
+				return CombatSkillResult.OutOfRange; 
+
+			if (attacker.Region.Collisions.Any(attackerPosition, mainTargetPosition)) // Check collisions between position
+				return CombatSkillResult.Okay;
+
+			return UseWithoutRangeCheck(attacker, skill, targetEntityId, mainTarget);
+		}
+
+		/// <summary>
+		/// Handles skill usage while ignoring range.
+		/// </summary>
+		/// <param name="attacker"></param>
+		/// <param name="skill"></param>
+		/// <param name="targetEntityId"></param>
+		/// <returns></returns>
+		public CombatSkillResult UseWithoutRangeCheck(Creature attacker, Skill skill, long targetEntityId, Creature mainTarget, SkillId interceptingSkillId = SkillId.None)
+		{
+			if (mainTarget.Conditions.Has(ConditionsA.Invisible)) // Check visiblility (GM)
+				return CombatSkillResult.Okay;
+
 			// Against Normal Attack
 			Skill combatMastery = mainTarget.Skills.Get(SkillId.CombatMastery);
-			if (combatMastery != null && (mainTarget.Skills.ActiveSkill == null || mainTarget.Skills.ActiveSkill == combatMastery || mainTarget.Skills.IsReady(SkillId.FinalHit)) && mainTarget.IsInBattleStance && mainTarget.Target == attacker && mainTarget.AttemptingAttack && (!mainTarget.IsStunned || mainTarget.IsKnockedDown))
+			if (interceptingSkillId == SkillId.None && combatMastery != null && (mainTarget.Skills.ActiveSkill == null || mainTarget.Skills.ActiveSkill == combatMastery || mainTarget.Skills.IsReady(SkillId.FinalHit)) && mainTarget.IsInBattleStance && mainTarget.Target == attacker && mainTarget.AttemptingAttack && (!mainTarget.IsStunned || mainTarget.IsKnockedDown))
 			{
-				mainTarget.InterceptingSkillId = SkillId.Smash;
-				mainTarget.IgnoreAttackRange = true;
-				var skillHandler = ChannelServer.Instance.SkillManager.GetHandler<ICombatSkill>(combatMastery.Info.Id);
-				if (skillHandler == null)
+				if (mainTarget.CanTarget(attacker) && mainTarget.Can(Locks.Attack)) //TODO: Add Hit lock when available.
 				{
-					Log.Error("Smash.Use: Target's skill handler not found for '{0}'.", combatMastery.Info.Id);
+					var skillHandler = ChannelServer.Instance.SkillManager.GetHandler<ICombatSkill>(combatMastery.Info.Id);
+					if (skillHandler == null)
+					{
+						Log.Error("Smash.Use: Target's skill handler not found for '{0}'.", combatMastery.Info.Id);
+						return CombatSkillResult.Okay;
+					}
+					((CombatMastery)skillHandler).UseWithoutRangeCheck(mainTarget, combatMastery, attacker.EntityId, attacker, SkillId.Smash);
 					return CombatSkillResult.Okay;
 				}
-				skillHandler.Use(mainTarget, combatMastery, attacker.EntityId);
-				return CombatSkillResult.Okay;
-			}
-
-			// Against Windmill
-			//TODO: Change this into the new NPC client system when it comes out if needed.
-			Skill windmill = mainTarget.Skills.Get(SkillId.Windmill);
-			if (windmill != null && mainTarget.Skills.IsReady(SkillId.Windmill) && !mainTarget.IsPlayer && mainTarget.CanAttack(attacker))
-			{
-				mainTarget.InterceptingSkillId = SkillId.Smash;
-				var skillHandler = ChannelServer.Instance.SkillManager.GetHandler<IUseable>(windmill.Info.Id) as Windmill;
-				if (skillHandler == null)
-				{
-					Log.Error("Smash.Use: Target's skill handler not found for '{0}'.", windmill.Info.Id);
-					return CombatSkillResult.Okay;
-				}
-				skillHandler.Use(mainTarget, windmill, null);
-				return CombatSkillResult.Okay;
 			}
 
 			// Against Smash
 			Skill smash = mainTarget.Skills.Get(SkillId.Smash);
-			if (smash != null && mainTarget.Skills.IsReady(SkillId.Smash) && mainTarget.IsInBattleStance && mainTarget.Target == attacker && !mainTarget.IsStunned && attacker.CanAttack(mainTarget))
+			if (interceptingSkillId == SkillId.None && smash != null && mainTarget.Skills.IsReady(SkillId.Smash) && mainTarget.IsInBattleStance && mainTarget.Target == attacker && !mainTarget.IsStunned)
 			{
 				var attackerStunTime = CombatMastery.GetAttackerStun(attacker, attacker.RightHand, false);
 				var mainTargetStunTime = CombatMastery.GetAttackerStun(mainTarget, mainTarget.Inventory.RightHand, false);
-				double chances = ((((2725 - attackerStunTime) / 2500) * 320) - (((2725 - mainTargetStunTime) / 2500) * 320)) + 50; //Probability in percentage that you will not lose.  2725 is 2500 (Slowest stun) + 225 (Fastest stun divided by two so that the fastest stun isn't 100%)
-				chances = Math2.Clamp(0.0, 99.0, chances);
+				var slowestStun = CombatMastery.GetAttackerStun(1, AttackSpeed.VerySlow, false);
+				var additionalStun = slowestStun + (CombatMastery.GetAttackerStun(5, AttackSpeed.VeryFast, false) / 2); //Fastest stun divided by two so that the fastest stun doesn't always beat out the slowest stun.  The addition is so that the subtration (Ex. additionalStun - attackerStunTime) ends in the desired range.
+				var formulaMultiplier = 320; //Multiplier to keep the result reasonable, found through trial and error?
+				var formulaEqualizer = 50; //Balances the subtraction to keep the result in a reasonable range and balanced out no matter the order.
+				double chances = ((((additionalStun - attackerStunTime) / slowestStun) * formulaMultiplier) - (((additionalStun - mainTargetStunTime) / slowestStun) * formulaMultiplier)) + formulaEqualizer; //Probability in percentage that you will not lose.
+				chances = Math2.Clamp(0.0, 99.0, chances); //Cap the stun, just in case.
 
 				if (((mainTarget.LastKnockedBackBy == attacker && mainTarget.KnockDownTime > attacker.KnockDownTime && mainTarget.KnockDownTime.AddMilliseconds(mainTargetStunTime) > DateTime.Now ||
 					/*attackerStunTime > initialTargetStunTime && */
 					!(attacker.LastKnockedBackBy == mainTarget && attacker.KnockDownTime > mainTarget.KnockDownTime && attacker.KnockDownTime.AddMilliseconds(attackerStunTime) > DateTime.Now))))
 				{
 
-					if (mainTarget.CanAttack(attacker))
+					if (mainTarget.CanTarget(attacker) && mainTarget.Can(Locks.Attack)) //TODO: Add Hit lock when available.
 					{
-						mainTarget.InterceptingSkillId = SkillId.Smash;
-						mainTarget.IgnoreAttackRange = true;
 						var skillHandler = ChannelServer.Instance.SkillManager.GetHandler<ICombatSkill>(smash.Info.Id);
 						if (skillHandler == null)
 						{
 							Log.Error("Smash.Use: Target's skill handler not found for '{0}'.", smash.Info.Id);
 							return CombatSkillResult.Okay;
 						}
-						skillHandler.Use(mainTarget, smash, attacker.EntityId);
+						((Smash)skillHandler).UseWithoutRangeCheck(mainTarget, smash, attacker.EntityId, attacker, SkillId.Smash);
 						return CombatSkillResult.Okay;
 					}
 				}
 				else
 				{
-					attacker.InterceptingSkillId = SkillId.Smash;
+					interceptingSkillId = SkillId.Smash;
 				}
 			}
 
 			// Stop movement
 			attacker.StopMove();
 			mainTarget.StopMove();
-
-			mainTarget.IgnoreAttackRange = false;
 
 			// Get targets, incl. splash.
 			// Splash happens from r5 onwards, but we'll base it on Var4,
@@ -224,9 +216,9 @@ namespace Aura.Channel.Skills.Combat
 				target.StopMove();
 
 				TargetAction tAction;
-				if(target == mainTarget)
+				if (target == mainTarget)
 				{
-					if (attacker.InterceptingSkillId == SkillId.Smash)
+					if (interceptingSkillId == SkillId.Smash)
 					{
 						aAction.Options |= AttackerOptions.Result;
 						tAction = new TargetAction(CombatActionType.CounteredHit, target, attacker, SkillId.Smash);
@@ -236,7 +228,6 @@ namespace Aura.Channel.Skills.Combat
 					{
 						tAction = new TargetAction(CombatActionType.TakeHit, target, attacker, skill.Info.Id);
 					}
-					attacker.InterceptingSkillId = SkillId.None;
 				}
 				else
 				{
@@ -306,13 +297,13 @@ namespace Aura.Channel.Skills.Combat
 			return CombatSkillResult.Okay;
 		}
 
-		/// <summary>
-		/// Returns the raw damage to be done.
-		/// </summary>
-		/// <param name="attacker"></param>
-		/// <param name="skill"></param>
-		/// <returns></returns>
-		protected float GetDamage(Creature attacker, Skill skill)
+        /// <summary>
+        /// Returns the raw damage to be done.
+        /// </summary>
+        /// <param name="attacker"></param>
+        /// <param name="skill"></param>
+        /// <returns></returns>
+        protected float GetDamage(Creature attacker, Skill skill)
 		{
 			var result = attacker.GetRndTotalDamage();
 			result *= skill.RankData.Var1 / 100f;
