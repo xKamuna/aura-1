@@ -21,6 +21,7 @@ using Aura.Channel.Skills;
 using System.Threading;
 using Aura.Channel.Scripting.Scripts;
 using Aura.Shared.Database;
+using Aura.Channel.World.Dungeons;
 
 namespace Aura.Channel.World.Entities
 {
@@ -228,6 +229,12 @@ namespace Aura.Channel.World.Entities
 				if (!this.Client.Account.PremiumServices.HasPremiumService)
 					return false;
 
+				// Dead characters should not be moved to the Soul Stream,
+				// as they will get stuck there, not being able to move
+				// or revive.
+				if (this.IsDead)
+					return false;
+
 				var now = DateTime.Now;
 
 				// No present if today is not the player's birthday or the character
@@ -244,6 +251,36 @@ namespace Aura.Channel.World.Entities
 
 				// Only allow present if player didn't already receive one today.
 				return (last.Date < now.Date);
+			}
+		}
+
+		/// <summary>
+		/// Returns true if creature is in Tir Na Nog or a dungeon there.
+		/// </summary>
+		public bool IsInTirNaNog
+		{
+			get
+			{
+				// Check non-dynamic regions
+				var regionId = this.Region.Id;
+				if (regionId >= 35 && regionId <= 46)
+					return true;
+
+				// Check dungeon regions
+				var dungeonRegion = this.Region as DungeonRegion;
+				if (dungeonRegion != null && dungeonRegion.Dungeon.Name.ToLower().Contains("tirnanog"))
+					return true;
+
+				// Check dynamic regions
+				var dynamicRegion = this.Region as DynamicRegion;
+				if (dynamicRegion != null)
+				{
+					regionId = dynamicRegion.BaseId;
+					if (regionId >= 35 && regionId <= 46)
+						return true;
+				}
+
+				return false;
 			}
 		}
 
@@ -667,12 +704,12 @@ namespace Aura.Channel.World.Entities
 		public int LeftAttackMaxMod { get { return (this.LeftHand != null ? this.LeftHand.OptionInfo.AttackMax : 0); } }
 
 		/// <summary>
-		/// Used for title bonuses.
+		/// Used for title, enchant, and other bonuses.
 		/// </summary>
 		public int AttackMinMod { get { return (int)this.StatMods.Get(Stat.AttackMinMod); } }
 
 		/// <summary>
-		/// Used for title bonuses.
+		/// Used for title, enchant, and other bonuses.
 		/// </summary>
 		public int AttackMaxMod { get { return (int)this.StatMods.Get(Stat.AttackMaxMod); } }
 
@@ -1169,7 +1206,7 @@ namespace Aura.Channel.World.Entities
 
 			// Add regens
 			// The wiki says it's 0.125 life, but the packets have 0.12.
-			this.Regens.Add(Stat.Life, 0.12f, this.LifeMax);
+			this.Regens.Add(Stat.Life, 0.12f * this.RaceData.LifeRecoveryRate, this.LifeMax);
 			this.Regens.Add(Stat.Mana, 0.05f, this.ManaMax);
 			this.Regens.Add(Stat.Stamina, 0.4f, this.StaminaMax);
 			if (ChannelServer.Instance.Conf.World.EnableHunger)
@@ -1489,6 +1526,8 @@ namespace Aura.Channel.World.Entities
 			// TODO: General creature components in a list, with Update interface?
 			this.Regens.OnSecondsTimeTick(time);
 			this.StatMods.OnSecondsTimeTick(time);
+			this.Conditions.OnSecondsTimeTick(time);
+			this.Skills.OnSecondsTimeTick(time);
 		}
 
 		/// <summary>
@@ -1918,8 +1957,8 @@ namespace Aura.Channel.World.Entities
 		public float GetRndRangedDamage()
 		{
 			// Base damage
-			float min = this.AttackMinBase;
-			float max = this.AttackMaxBase;
+			float min = this.AttackMinBase + this.AttackMinMod;
+			float max = this.AttackMaxBase + this.AttackMaxMod;
 
 			// Weapon
 			min += (this.RightHand == null ? 0 : this.RightHand.OptionInfo.AttackMin);
@@ -2498,6 +2537,7 @@ namespace Aura.Channel.World.Entities
 				case ReviveOptions.TirChonaill:
 				case ReviveOptions.DungeonEntrance:
 				case ReviveOptions.BarriLobby:
+				case ReviveOptions.TirNaNog:
 					// 100% life and 50% injury recovery
 					this.Injuries -= this.Injuries * 0.50f;
 					this.Life = this.LifeMax;
