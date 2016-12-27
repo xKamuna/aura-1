@@ -15,6 +15,8 @@ using Aura.Channel.Skills.Life;
 using Aura.Mabi;
 using Aura.Channel.Skills.Magic;
 using Aura.Channel.Network.Sending;
+using Aura.Data;
+using System.Threading.Tasks;
 
 namespace Aura.Channel.Skills.Combat
 {
@@ -172,6 +174,8 @@ namespace Aura.Channel.Skills.Combat
 			var maxHits = (byte)(attacker.IsDualWielding ? 2 : 1);
 			int prevId = 0;
 
+			var knockedBackTargets = new HashSet<long>();
+
 			for (byte i = 1; i <= maxHits; ++i)
 			{
 				var weapon = (i == 1 ? rightWeapon : leftWeapon);
@@ -212,7 +216,9 @@ namespace Aura.Channel.Skills.Combat
 
 				foreach (var target in targets)
 				{
-					if (target.IsDead)
+					// Skip targets that were knocked back, as they aren't in
+					// range anymore.
+					if (knockedBackTargets.Contains(target.EntityId))
 						continue;
 
 					target.StopMove();
@@ -330,6 +336,8 @@ namespace Aura.Channel.Skills.Combat
 						attacker.Shove(target, KnockBackDistance);
 						if (target == mainTarget)
 							aAction.Set(AttackerOptions.KnockBackHit2);
+
+						knockedBackTargets.Add(target.EntityId);
 					}
 
 					// Set stun time if not defended, Defense handles the stun
@@ -371,6 +379,25 @@ namespace Aura.Channel.Skills.Combat
 							// the second hit.
 							if (cap.Hit != 2)
 								aAction.Options &= ~AttackerOptions.DualWield;
+						}
+
+						// Reduce attacker's knockback stun in new combat, to allow
+						// movement after sooner.
+						// It's unknown when exactly this was added, but older EU logs
+						// don't have this packet, so we'll assume it was part of the the
+						// new combat, which's purpose was to be faster.
+						// Sending the packet appears to reset the movement lock, and
+						// officials seem to send this about 1s after the attack, for
+						// an effective 1s movement lock after an attack.
+						// If it's send for non-knockback hits, it can add a delay,
+						// maybe increasing the time of the lock, like for dual-wielding.
+						if (AuraData.FeaturesDb.IsEnabled("CombatSystemRenewal"))
+						{
+							if (tAction.IsKnockBack)
+							{
+								Task.Delay(1000).ContinueWith(_ =>
+									Send.CharacterLockUpdate(attacker, 18, 1500));
+							}
 						}
 					}
 				}

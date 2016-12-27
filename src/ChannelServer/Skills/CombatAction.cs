@@ -272,6 +272,16 @@ namespace Aura.Channel.Skills
 				{
 					var aAction = action as AttackerAction;
 
+					if (action.Creature.IsPlayer && action.SkillId >= SkillId.RangedAttack && action.SkillId <= SkillId.UrgentShot && !AuraData.FeaturesDb.IsEnabled("CombatSystemRenewal"))
+					{
+						// Players don't seem to be stunned from ranging
+						// on old officials. While the proper stun is sent
+						// to the client, for some reason you didn't need
+						// to wait. Since we don't know how officials did
+						// that, we'll just cap the stun time.
+						action.Stun = 0;
+					}
+
 					action.Creature.Stun = action.Stun;
 
 					var npc = action.Creature as NPC;

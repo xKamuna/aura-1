@@ -9,6 +9,8 @@ Custom pages should go into the [user folder](https://github.com/aura-project/au
 improvements to existing pages should be pushed to the [main repository](https://github.com/aura-project/aura),
 for the benefit of all Aura users.
 
+__TOC__
+
 URL
 ------------------------------------------------------------------------------
 
@@ -59,3 +61,84 @@ plain text editor, due to Markdown's natural design.
 For more information on Markdown and available codes, head over to
 the [CommonMark page](http://spec.commonmark.org/0.26/), specifically its
 [Help page](http://commonmark.org/help/).
+
+Feature specific text
+-----------------------------------------------------------------------------
+
+The purpose of this Wiki is not to just have your own little Wiki, but to
+have a Wiki that adjusts itself to the features enabled on the server.
+For example, in the G1 quest "Bind Magic", the number of zombies you have
+to kill depends on the enabled generations, or rather their features.
+In the beginning that number was 50, then it was reduced to 10, and nowadays
+it's only 1.
+
+If the wiki just said "X", or listed all possible values, it would become
+a little chaotic or confusing. Instead, you can filter which information
+are displayed via CSS, like in the following example.
+
+```
+1. Talk to Dougal. His owl will soon deliver a quest.
+2. Kill
+   <span data-feature="!EasyBinding1"><span data-feature="!EasyBinding2">50</span></span>
+   <span data-feature="EasyBinding1"><span data-feature="!EasyBinding2">10</span></span>
+   <span data-feature="EasyBinding2">1</span>
+   zombies in graveyard area.
+3. After clearing the quest, one can revive near Dougal
+   when knocked unconscious.
+```
+
+If you wrap something in a tag with the data-feature attribute it will only
+be visible if the feature is enabled. You can also negate it, hiding it if
+the feature is enabled. In the following example only one line will be
+displayed, depending on whether the EmainMacha feature is enabled or not.
+
+```
+<span data-feature="EmainMacha">Emain Macha is a town west of Dunbarton.</span>
+<span data-feature="!EmainMacha">Emain what now?</span>
+```
+
+This is the big advantage of this Wiki over others, which only ever reflect
+the latest updates of Mabinogi.
+
+Table of contents
+-----------------------------------------------------------------------------
+
+The table of contents (TOC) is a list of headers on a page that you can jump
+to by clicking on them. It's not inserted by default, but you can add it
+to a page by placing the following code somewhere on it:
+
+```
+__TOC__
+```
+
+For example:
+
+```
+Page Title
+=============================================================================
+
+Description.
+
+__TOC__
+
+First header
+-----------------------------------------------------------------------------
+```
+
+By default only level 1 headers (H2) are visible in the table, so we can
+use H3 and higher without them blowing up the TOC. The others are hidden
+via CSS. To make them appear on one page only, you need to place CSS code
+on it to make that happen. For example, to display level 2 headers (H3)
+you would change the respective display property to `block`.
+
+```
+End of page text.
+
+<style>
+	.toc-level2 {
+		display: block;
+	}
+</style>
+```
+
+For more examples, just look at the existing pages.
