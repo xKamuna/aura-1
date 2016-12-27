@@ -129,9 +129,6 @@ namespace Aura.Channel.Skills.Combat
 		/// <returns></returns>
 		public CombatSkillResult UseWithoutRangeCheck(Creature attacker, Skill skill, long targetEntityId, Creature mainTarget, SkillId interceptingSkillId = SkillId.None)
 		{
-			if (mainTarget.Conditions.Has(ConditionsA.Invisible)) // Check visiblility (GM)
-				return CombatSkillResult.Okay;
-
 			// Against Normal Attack
 			Skill combatMastery = mainTarget.Skills.Get(SkillId.CombatMastery);
 			if (interceptingSkillId == SkillId.None && combatMastery != null && (mainTarget.Skills.ActiveSkill == null || mainTarget.Skills.ActiveSkill == combatMastery || mainTarget.Skills.IsReady(SkillId.FinalHit)) && mainTarget.IsInBattleStance && mainTarget.Target == attacker && mainTarget.AttemptingAttack && (!mainTarget.IsStunned || mainTarget.IsKnockedDown))

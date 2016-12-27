@@ -1348,6 +1348,11 @@ namespace Aura.Channel.World.Entities
 		/// <param name="walking"></param>
 		public void Move(Position destination, bool walking)
 		{
+			if (IsStunned)
+			{
+				StopMove();
+				return;
+			}
 			_position = this.GetPosition();
 			_destination = destination;
 			_moveStartTime = DateTime.Now;

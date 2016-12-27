@@ -67,9 +67,6 @@ namespace Aura.Channel.Skills.Combat
 
 		public CombatSkillResult UseWithoutRangeCheck(Creature attacker, Skill skill, long targetEntityId, Creature mainTarget, SkillId interceptingSkillId = SkillId.None)
 		{
-			if (mainTarget.Conditions.Has(ConditionsA.Invisible)) // Check visiblility (GM)
-				return CombatSkillResult.Okay;
-
 			//Against Smash
 			Skill smash = mainTarget.Skills.Get(SkillId.Smash);
 			if (interceptingSkillId == SkillId.None && smash != null && mainTarget.Skills.IsReady(SkillId.Smash))
